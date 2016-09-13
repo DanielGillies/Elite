@@ -10,12 +10,6 @@ AFPSCharacter::AFPSCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-	static ConstructorHelpers::FObjectFinder<UBlueprint>  ItemBlueprint(TEXT("Blueprint'/Game/Blueprints/BP_Rocket.BP_Rocket'"));
-	if (ItemBlueprint.Object)
-	{
-		RocketBlueprint = (UClass*)ItemBlueprint.Object->GeneratedClass;
-	}
 }
 
 // Called when the game starts or when spawned
@@ -118,6 +112,7 @@ void AFPSCharacter::OnFire()
 
 	// Spawn the rocket using the rocket blueprint
 	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
+	Rocket->LaunchProjectile(LaunchSpeed);
 }
 
 void AFPSCharacter::MoveRight(float Value)
@@ -138,7 +133,7 @@ void AFPSCharacter::Jump()
 	FVector WallImpact;
 	if (CheckForWalls(WallImpact))
 	{
-		GetCharacterMovement()->AddImpulse((WallImpact + (GetActorUpVector() * FVector(.5f))) * WallJumpForce, true);
+		GetCharacterMovement()->AddImpulse((WallImpact + (GetActorUpVector() * FVector(.7f))) * WallJumpForce, true);
 	}
 	if (!GetCharacterMovement()->IsFalling())
 	{

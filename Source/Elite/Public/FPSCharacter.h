@@ -12,11 +12,20 @@ class ELITE_API AFPSCharacter : public ACharacter
 	GENERATED_BODY()
 
 private:
+	UPROPERTY(EditAnywhere, Category = Movement)
 	float WallCheckRadius = 50.f;
 
-	float WallJumpForce = 300.f;
+	UPROPERTY(EditAnywhere, Category = Movement)
+	float WallJumpForce = 500.f;
 
+	UPROPERTY(EditAnywhere, Category = Movement)
 	float JumpForce = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = Firing)
+	float LaunchSpeed = 5000.f;
+
+	UPROPERTY(EditAnywhere, Category = Setup)
+	TSubclassOf<ARocket> RocketBlueprint;
 public:
 	// Sets default values for this character's properties
 	AFPSCharacter();
@@ -75,7 +84,5 @@ public:
 	bool CheckLeftForWalls(FHitResult& OutHitResult);
 
 	bool CheckRightForWalls(FHitResult& OutHitResult);
-
-	TSubclassOf<class ARocket> RocketBlueprint;
 
 };

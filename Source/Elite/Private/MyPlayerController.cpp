@@ -2,6 +2,8 @@
 
 #include "Elite.h"
 #include "../Public/MyPlayerController.h"
+#include "../Public/DefenderCharacter.h"
+#include "EliteGameMode.h"
 
 
 void AMyPlayerController::BeginPlay()
@@ -72,5 +74,30 @@ bool AMyPlayerController::GetSightRayHitLocation(FVector& HitLocation) const
 	}
 
 	return false;
+}
+
+bool AMyPlayerController::ChangeTeam(bool FromAttacker)
+{
+	FVector SpawnLocation = FVector(0, 0, 0);
+	APawn* OldPawn = GetPawn();
+	AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
+
+	if (FromAttacker)
+	{
+		TSubclassOf<ADefenderCharacter> DefenderBP = GameMode->DefenderBlueprint;
+		ADefenderCharacter* NewCharacter = (ADefenderCharacter*)GetWorld()->SpawnActor(DefenderBP, &SpawnLocation, &FRotator::ZeroRotator);
+		Possess(NewCharacter);
+		UE_LOG(LogTemp, Warning, TEXT("Switched to defender"))
+	}
+	else
+	{
+		TSubclassOf<AAttackerCharacter> AttackerBP = GameMode->AttackerBlueprint;
+		AAttackerCharacter* NewCharacter = (AAttackerCharacter*)GetWorld()->SpawnActor(AttackerBP, &SpawnLocation, &FRotator::ZeroRotator);
+		Possess(NewCharacter);
+		UE_LOG(LogTemp, Warning, TEXT("Switched to attacker"))
+	}
+
+	OldPawn->Destroy();
+	return true;
 }
 

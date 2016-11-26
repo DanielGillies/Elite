@@ -6,12 +6,17 @@
 #include "GameFramework/Character.h"
 #include "FPSCharacter.generated.h"
 
+class ADefenderCharacter;
+
 UCLASS()
 class ELITE_API AFPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 private:
+	UPROPERTY(EditAnywhere, Category = Movement)
+	float StrafeSpeedMult = .3f;
+
 	UPROPERTY(EditAnywhere, Category = Movement)
 	float WallCheckRadius = 50.f;
 
@@ -21,12 +26,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = Movement)
 	float JumpForce = 300.f;
 
-	UPROPERTY(EditAnywhere, Category = Firing)
-	float LaunchSpeed = 5000.f;
-
-	UPROPERTY(EditAnywhere, Category = Setup)
-	TSubclassOf<ARocket> RocketBlueprint;
 public:
+
+	//UPROPERTY(EditAnywhere, Category = Players)
+	//TSubclassOf<ADefenderCharacter> DefenderBlueprint;
+
 	// Sets default values for this character's properties
 	AFPSCharacter();
 
@@ -62,8 +66,8 @@ public:
 	UFUNCTION()
 	void JumpReleased();
 
-	UFUNCTION()
-	void OnFire();
+	/*UFUNCTION()
+	void OnFire();*/
 
 	// Walk speed multiplier
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CustomMovement)
@@ -84,5 +88,7 @@ public:
 	bool CheckLeftForWalls(FHitResult& OutHitResult);
 
 	bool CheckRightForWalls(FHitResult& OutHitResult);
+
+	void ChangeTeam();
 
 };

@@ -27,6 +27,6 @@ public:
 
 	bool GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation) const;
 
-	
+	bool ChangeTeam(bool FromAttacker);
 	
 };

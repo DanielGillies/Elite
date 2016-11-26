@@ -44,8 +44,6 @@ void AFPSCharacter::SetupPlayerInputComponent(class UInputComponent* InputCompon
 	InputComponent->BindAction("Jump", IE_Pressed, this, &AFPSCharacter::Jump);
 	InputComponent->BindAction("Jump", IE_Released, this, &AFPSCharacter::JumpReleased);
 
-	InputComponent->BindAction("Fire", IE_Pressed, this, &AFPSCharacter::OnFire);
-
 	//InputComponent->BindAction("Jump", IE_Pressed, this, &AFPSCharacter::OnStartJump);
 	//InputComponent->BindAction("Jump", IE_Released, this, &AFPSCharacter::OnStopJump);
 }
@@ -79,42 +77,6 @@ void AFPSCharacter::MoveForward(float Value)
 	}
 }
 
-void AFPSCharacter::OnFire()
-{
-	// Set up SpawnParams for rocket
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = Instigator;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	// Set up Player Controller to access functions
-	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
-
-	// Getting Rotation from character to 3D world space of xhair
-	FVector HitLocation;
-	FVector Location;
-	FRotator Rotation;
-	if (PC->GetSightRayHitLocation(HitLocation))
-	{
-		// Setting up the rotation and location of the spawn point for the rocket
-		Location = GetActorLocation() + (GetActorForwardVector() * 100);
-		Rotation = (HitLocation - (Location)).Rotation();
-	}
-	else
-	{
-		// Setting up the rotation and location of the spawn point for the rocket
-		Location = GetActorLocation() + (GetActorForwardVector() * 100);
-		Rotation = GetControlRotation();
-		Rotation.Pitch += 1.f;
-	}
-
-	FTransform ProjectileTransform = FTransform(Rotation, Location, FVector(0));
-
-	// Spawn the rocket using the rocket blueprint
-	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
-	Rocket->LaunchProjectile(LaunchSpeed);
-}
-
 void AFPSCharacter::MoveRight(float Value)
 {
 	// Find out which direction is right
@@ -123,8 +85,16 @@ void AFPSCharacter::MoveRight(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FVector Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
 		
-		// Add movement in that direction
-		AddMovementInput(Direction, Value);
+		if (bSprintActive)
+		{
+			// Stafing is much slower while sprinting
+			AddMovementInput(Direction, Value * StrafeSpeedMult);
+		}
+		else
+		{
+			// Add movement in that direction
+			AddMovementInput(Direction, Value);
+		}
 	}
 }
 

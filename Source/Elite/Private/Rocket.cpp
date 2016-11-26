@@ -15,7 +15,7 @@ ARocket::ARocket()
 	ProjectileMovementComponent->bAutoActivate = false;
 	ProjectileMovementComponent->ProjectileGravityScale = 0;
 
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *CollisionComp->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *CollisionComp->GetName());
 
 }
 

@@ -10,6 +10,20 @@ AFPSCharacter::AFPSCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+
+	SetupMovementComponent();
+}
+
+void AFPSCharacter::SetupMovementComponent()
+{
+	UCharacterMovementComponent* CharMove = GetCharacterMovement();
+
+	CharMove->AirControl = .25;
+	CharMove->BrakingDecelerationWalking = 400.0;
+	CharMove->MaxAcceleration = 3000.0;
+	CharMove->BrakingFriction = .1;
+	CharMove->bUseSeparateBrakingFriction = true;
 }
 
 // Called when the game starts or when spawned

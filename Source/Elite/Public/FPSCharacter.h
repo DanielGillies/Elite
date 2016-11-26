@@ -91,4 +91,6 @@ public:
 
 	void ChangeTeam();
 
+	virtual void SetupMovementComponent();
+
 };

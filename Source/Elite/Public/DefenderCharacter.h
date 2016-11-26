@@ -41,4 +41,6 @@ public:
 	int Health = 1;
 
 	void ChangeTeam();
+
+	virtual void SetupMovementComponent() override;
 };

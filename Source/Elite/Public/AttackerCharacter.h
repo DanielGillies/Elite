@@ -60,4 +60,6 @@ public:
 	UFUNCTION()
 	void Reload();
 
+	UPROPERTY(EditDefaultsOnly, Category = Firing)
+	UParticleSystem* RailBeam;
 };

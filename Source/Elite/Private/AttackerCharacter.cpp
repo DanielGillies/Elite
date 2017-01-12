@@ -40,84 +40,51 @@ void AAttackerCharacter::SetupPlayerInputComponent(class UInputComponent* InputC
 // Currently being handled by blueprint
 void AAttackerCharacter::OnFire()
 {
+	if (CanFire())
+	{
+		// Set up Player Controller to access functions
+		AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
 
-	// Set up SpawnParams for rocket
-	//FActorSpawnParameters SpawnParams;
-	//SpawnParams.Owner = this;
-	//SpawnParams.Instigator = Instigator;
-	//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		// Start and end vectors for line trace
+		FVector Start = PC->PlayerCameraManager->GetCameraLocation() - FVector(0, 0, 10);;
+		FVector End = Start + PC->GetActorForwardVector() * 5000;
 
-	// Set up Player Controller to access functions
-	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
-	FVector CameraLocation = PC->PlayerCameraManager->GetCameraLocation();
-	FVector MyLocation = GetActorLocation();
-	FVector Direction = MyLocation - CameraLocation;
+		// Store the hit result
+		FHitResult HitResult;
 
-	FVector ActorLocation = PC->PlayerCameraManager->GetCameraLocation() - FVector(0, 0, 10);
-	FVector Start = ActorLocation;
-	FVector End = Start + PC->GetActorForwardVector() * 5000;
+		// Set up trace params
+		const FName TraceTag("MyTraceTag");
+		GetWorld()->DebugDrawTraceTag = TraceTag;
+		FCollisionQueryParams TraceParameters;
+		TraceParameters.TraceTag = TraceTag;
+		/*TraceParameters.bTraceComplex = true;
+		TraceParameters.bTraceAsyncScene = true;*/
 
-	FHitResult HitResult;
+		// Do line trace
+		GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_Visibility,
+			FCollisionQueryParams()
+		);
 
-	FVector EndVector = PC->PlayerCameraManager->GetCameraRotation().Vector() * 5000;
-	FVector StartVector = PC->PlayerCameraManager->GetCameraLocation();
+		// Spawn rail
+		UParticleSystemComponent* Rail = UGameplayStatics::SpawnEmitterAtLocation(this, RailBeam, Start);
 
-	const FName TraceTag("MyTraceTag");
-	GetWorld()->DebugDrawTraceTag = TraceTag;
-	FCollisionQueryParams TraceParameters;
-	TraceParameters.TraceTag = TraceTag;
-	TraceParameters.bTraceComplex = true;
-	TraceParameters.bTraceAsyncScene = true;
-
-	GetWorld()->LineTraceSingleByChannel(
-		HitResult,
-		Start,
-		End,
-		ECollisionChannel::ECC_Visibility,
-		TraceParameters
-	);
-
-	DrawDebugLine(
-		GetWorld(),
-		Start,
-		End,
-		FColor(255, 0, 0),
-		false, 100, 0,
-		12.333
-	);
-
-	// Getting Rotation from character to 3D world space of xhair
-	FVector HitLocation;
-	FVector Location;
-	FRotator Rotation;
-
-	/*const FName TraceTag("MyTraceTag");
-	GetWorld()->DebugDrawTraceTag = TraceTag;
-	FCollisionQueryParams TraceParameters;
-	TraceParameters.TraceTag = TraceTag;
-
-	FVector CameraLocation = PC->PlayerCameraManager->GetCameraLocation();
-
-	FVector End = CameraLocation + PC->PlayerCameraManager->GetActorForwardVector() * 10000;
-	FVector Start = CameraLocation + PC->PlayerCameraManager->GetActorForwardVector() * 500;
-	FHitResult HitResult;
-
-	GetWorld()->LineTraceSingleByChannel(HitResult,
-		Start,
-		End,
-		ECollisionChannel::ECC_Visibility,
-		TraceParameters);
-
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *HitResult.GetActor()->GetName());*/
-
-	/*DrawDebugLine(
-		GetWorld(),
-		GetReachLineStart(),
-		GetReachLineEnd(),
-		FColor(255, 0, 0),
-		false, 100, 0,
-		12.333
-	);*/
+		// If we hit something, draw rail from where we shot to where we hit
+		if (HitResult.bBlockingHit)
+		{
+			Rail->SetBeamSourcePoint(0, Start, 0);
+			Rail->SetBeamTargetPoint(0, HitResult.Location, 0);
+		}
+		// Else draw to end of raytrace
+		else
+		{
+			Rail->SetBeamSourcePoint(0, Start, 0);
+			Rail->SetBeamTargetPoint(0, End, 0);
+		}
+	}
 }
 
 void AAttackerCharacter::ChangeTeam()

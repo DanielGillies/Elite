@@ -40,6 +40,7 @@ void AAttackerCharacter::SetupPlayerInputComponent(class UInputComponent* InputC
 // Currently being handled by blueprint
 void AAttackerCharacter::OnFire()
 {
+
 	// Set up SpawnParams for rocket
 	//FActorSpawnParameters SpawnParams;
 	//SpawnParams.Owner = this;
@@ -48,6 +49,42 @@ void AAttackerCharacter::OnFire()
 
 	// Set up Player Controller to access functions
 	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
+	FVector CameraLocation = PC->PlayerCameraManager->GetCameraLocation();
+	FVector MyLocation = GetActorLocation();
+	FVector Direction = MyLocation - CameraLocation;
+
+	FVector ActorLocation = PC->PlayerCameraManager->GetCameraLocation() - FVector(0, 0, 10);
+	FVector Start = ActorLocation;
+	FVector End = Start + PC->GetActorForwardVector() * 5000;
+
+	FHitResult HitResult;
+
+	FVector EndVector = PC->PlayerCameraManager->GetCameraRotation().Vector() * 5000;
+	FVector StartVector = PC->PlayerCameraManager->GetCameraLocation();
+
+	const FName TraceTag("MyTraceTag");
+	GetWorld()->DebugDrawTraceTag = TraceTag;
+	FCollisionQueryParams TraceParameters;
+	TraceParameters.TraceTag = TraceTag;
+	TraceParameters.bTraceComplex = true;
+	TraceParameters.bTraceAsyncScene = true;
+
+	GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		Start,
+		End,
+		ECollisionChannel::ECC_Visibility,
+		TraceParameters
+	);
+
+	DrawDebugLine(
+		GetWorld(),
+		Start,
+		End,
+		FColor(255, 0, 0),
+		false, 100, 0,
+		12.333
+	);
 
 	// Getting Rotation from character to 3D world space of xhair
 	FVector HitLocation;
@@ -101,7 +138,7 @@ bool AAttackerCharacter::CanFire()
 		Ammo -= 1;
 
 		FTimerHandle UnusedHandle;
-		GetWorldTimerManager().SetTimer(UnusedHandle, this, &AAttackerCharacter::Reload, 1.0, false);
+		GetWorldTimerManager().SetTimer(UnusedHandle, this, &AAttackerCharacter::Reload, RechargeTime, false);
 		return true;
 	}
 	else

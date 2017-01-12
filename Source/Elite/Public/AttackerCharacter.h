@@ -50,6 +50,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo)
 	int MaxAmmo = 1;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo)
+	float RechargeTime = 1.5f;
+
 	// Calls reload
 	UFUNCTION(BlueprintCallable, Category=Firing)
 	bool CanFire();

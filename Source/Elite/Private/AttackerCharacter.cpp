@@ -11,6 +11,8 @@ AAttackerCharacter::AAttackerCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	Ammo = MaxAmmo;
+
 	SetupMovementComponent();
 }
 
@@ -90,4 +92,25 @@ void AAttackerCharacter::ChangeTeam()
 void AAttackerCharacter::SetupMovementComponent()
 {
 	Super::SetupMovementComponent();
+}
+
+bool AAttackerCharacter::CanFire()
+{
+	if (Ammo > 0)
+	{
+		Ammo -= 1;
+
+		FTimerHandle UnusedHandle;
+		GetWorldTimerManager().SetTimer(UnusedHandle, this, &AAttackerCharacter::Reload, 1.0, false);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void AAttackerCharacter::Reload()
+{
+	Ammo = MaxAmmo;
 }

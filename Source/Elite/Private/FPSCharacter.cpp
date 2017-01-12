@@ -18,10 +18,9 @@ AFPSCharacter::AFPSCharacter()
 void AFPSCharacter::SetupMovementComponent()
 {
 	UCharacterMovementComponent* CharMove = GetCharacterMovement();
-
 	CharMove->AirControl = .25;
-	CharMove->BrakingDecelerationWalking = 400.0;
-	CharMove->MaxAcceleration = 3000.0;
+	CharMove->BrakingDecelerationWalking = 100.0;
+	CharMove->MaxAcceleration = 2000.0;
 	CharMove->BrakingFriction = .1;
 	CharMove->bUseSeparateBrakingFriction = true;
 }

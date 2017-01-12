@@ -75,6 +75,10 @@ void ADefenderCharacter::OnFire()
 	// Spawn the rocket using the rocket blueprint
 	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
 	Rocket->LaunchProjectile(LaunchSpeed);
+	Rocket->SetReplicates(true);
+	Rocket->bAlwaysRelevant = true;
+	Rocket->bReplicateMovement = true;
+
 }
 
 void ADefenderCharacter::ChangeTeam()

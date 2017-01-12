@@ -43,4 +43,18 @@ public:
 
 	virtual void SetupMovementComponent() override;
 
+	// GUN STUFF
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Ammo)
+	int Ammo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo)
+	int MaxAmmo = 1;
+
+	// Calls reload
+	UFUNCTION(BlueprintCallable, Category=Firing)
+	bool CanFire();
+
+	UFUNCTION()
+	void Reload();
+
 };

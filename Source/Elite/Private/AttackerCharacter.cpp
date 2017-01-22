@@ -69,21 +69,8 @@ void AAttackerCharacter::OnFire()
 			FCollisionQueryParams()
 		);
 
-		// Spawn rail
-		UParticleSystemComponent* Rail = UGameplayStatics::SpawnEmitterAtLocation(this, RailBeam, Start);
+		CreateRailParticle(Start, End, HitResult);
 
-		// If we hit something, draw rail from where we shot to where we hit
-		if (HitResult.bBlockingHit)
-		{
-			Rail->SetBeamSourcePoint(0, Start, 0);
-			Rail->SetBeamTargetPoint(0, HitResult.Location, 0);
-		}
-		// Else draw to end of raytrace
-		else
-		{
-			Rail->SetBeamSourcePoint(0, Start, 0);
-			Rail->SetBeamTargetPoint(0, End, 0);
-		}
 	}
 }
 
@@ -117,4 +104,28 @@ bool AAttackerCharacter::CanFire()
 void AAttackerCharacter::Reload()
 {
 	Ammo = MaxAmmo;
+}
+
+void AAttackerCharacter::CreateRailParticle_Implementation(FVector Start, FVector End, FHitResult HitResult)
+{
+	// Spawn rail
+	UParticleSystemComponent* Rail = UGameplayStatics::SpawnEmitterAtLocation(this, RailBeam, Start);
+	UE_LOG(LogTemp, Warning, TEXT("SHOOT"));
+	// If we hit something, draw rail from where we shot to where we hit
+	if (HitResult.bBlockingHit)
+	{
+		Rail->SetBeamSourcePoint(0, Start, 0);
+		Rail->SetBeamTargetPoint(0, HitResult.Location, 0);
+	}
+	// Else draw to end of raytrace
+	else
+	{
+		Rail->SetBeamSourcePoint(0, Start, 0);
+		Rail->SetBeamTargetPoint(0, End, 0);
+	}
+}
+
+bool AAttackerCharacter::CreateRailParticle_Validate(FVector Start, FVector End, FHitResult HitResult)
+{
+	return true;
 }

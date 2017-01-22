@@ -21,4 +21,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Players)
 	TSubclassOf<AAttackerCharacter> AttackerBlueprint;
+
+
 };

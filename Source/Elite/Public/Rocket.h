@@ -20,12 +20,21 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	void LaunchProjectile(float LaunchSpeed);
+	void LaunchProjectile(FVector ShootDirection);
+
+	/** update velocity on client */
+	virtual void PostNetReceiveVelocity(const FVector& NewVelocity) override;
 
 private:
-	UProjectileMovementComponent* ProjectileMovementComponent = nullptr;
+	/** movement component */
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	UProjectileMovementComponent* MovementComp;
+
+	/** collisions */
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	USphereComponent* CollisionComp;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-	class USphereComponent* CollisionComp;
+	UParticleSystemComponent* ParticleComp;
 	
 };

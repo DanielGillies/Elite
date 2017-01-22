@@ -17,9 +17,6 @@ class ELITE_API ADefenderCharacter : public AFPSCharacter
 private:
 	UPROPERTY(EditAnywhere, Category = Firing)
 	float LaunchSpeed = 5000.f;
-
-	UPROPERTY(EditAnywhere, Category = Setup)
-	TSubclassOf<ARocket> RocketBlueprint;
 	
 public:
 	// Sets default values for this character's properties
@@ -34,6 +31,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
+	UPROPERTY(EditAnywhere, Category = Setup)
+	TSubclassOf<ARocket> RocketBlueprint;
+
 	UFUNCTION()
 	void OnFire();
 
@@ -43,4 +43,24 @@ public:
 	void ChangeTeam();
 
 	virtual void SetupMovementComponent() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo)
+	int MaxAmmo = 3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo)
+	int Ammo;
+
+	void Reload();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Ammo)
+	float RechargeTime = 1.5;
+
+	bool CanFire();
+
+	int GetCurrentAmmo();
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerFireProjectile(FTransform ProjectileTransform);
+
+	void Print(FString Message);
 };

@@ -10,10 +10,37 @@ ARocket::ARocket()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(FName("Projectile Movement Component"));
-	// Don't move projectile on spawn, wait until we call activate
-	ProjectileMovementComponent->bAutoActivate = false;
-	ProjectileMovementComponent->ProjectileGravityScale = 0;
+	CollisionComp = CreateDefaultSubobject<USphereComponent>(FName("Collision Component"), TEXT("SphereComp"));
+	CollisionComp->InitSphereRadius(5.0f);
+	CollisionComp->AlwaysLoadOnClient = true;
+	CollisionComp->AlwaysLoadOnServer = true;
+	CollisionComp->bTraceComplexOnMove = true;
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//CollisionComp->SetCollisionObjectType(COLLISION_PROJECTILE);
+	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	RootComponent = CollisionComp;
+
+	ParticleComp = CreateDefaultSubobject<UParticleSystemComponent>(FName("Particle Component"), TEXT("ParticleComp"));
+	ParticleComp->bAutoActivate = false;
+	ParticleComp->bAutoDestroy = false;
+	ParticleComp->SetupAttachment(RootComponent);
+
+	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(FName("Movement Component"), TEXT("ProjectileComp"));
+	MovementComp->UpdatedComponent = CollisionComp;
+	MovementComp->InitialSpeed = 2000.0f;
+	MovementComp->MaxSpeed = 2000.0f;
+	MovementComp->bRotationFollowsVelocity = true;
+	MovementComp->ProjectileGravityScale = 0.f;
+
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickGroup = TG_PrePhysics;
+	SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
+	bReplicates = true;
+	bReplicateMovement = true;
+	
 
 	//UE_LOG(LogTemp, Warning, TEXT("%s"), *CollisionComp->GetName());
 
@@ -23,6 +50,9 @@ ARocket::ARocket()
 void ARocket::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//SetReplicates(true);
+	bReplicateMovement = true;
 	
 }
 
@@ -33,8 +63,18 @@ void ARocket::Tick( float DeltaTime )
 
 }
 
-void ARocket::LaunchProjectile(float LaunchSpeed)
+void ARocket::LaunchProjectile(FVector ShootDirection)
 {
-	ProjectileMovementComponent->SetVelocityInLocalSpace(FVector::ForwardVector * LaunchSpeed);
-	ProjectileMovementComponent->Activate();
+	MovementComp->Velocity = ShootDirection * MovementComp->InitialSpeed;
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *ShootDirection.ToString());
+	//MovementComp->SetVelocityInLocalSpace(FVector::ForwardVector * LaunchSpeed);
+	MovementComp->Activate();
+}
+
+void ARocket::PostNetReceiveVelocity(const FVector& NewVelocity)
+{
+	if (MovementComp)
+	{
+		MovementComp->Velocity = NewVelocity;
+	}
 }

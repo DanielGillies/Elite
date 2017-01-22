@@ -12,6 +12,8 @@ ADefenderCharacter::ADefenderCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	SetupMovementComponent();
+
+	Ammo = MaxAmmo;
 }
 
 // Called when the game starts or when spawned
@@ -43,42 +45,83 @@ void ADefenderCharacter::SetupPlayerInputComponent(class UInputComponent* InputC
 
 void ADefenderCharacter::OnFire()
 {
-	// Set up SpawnParams for rocket
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = Instigator;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	// Set up Player Controller to access functions
-	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
-
-	// Getting Rotation from character to 3D world space of xhair
-	FVector HitLocation;
-	FVector Location;
-	FRotator Rotation;
-	if (PC->GetSightRayHitLocation(HitLocation))
+	if (CanFire())
 	{
-		// Setting up the rotation and location of the spawn point for the rocket
-		Location = GetActorLocation() + (GetActorForwardVector() * 100);
-		Rotation = (HitLocation - (Location)).Rotation();
+		// Set up SpawnParams for rocket
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = Instigator;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		// Set up Player Controller to access functions
+		AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
+
+		// Getting Rotation from character to 3D world space of xhair
+		FVector HitLocation;
+		FVector Location;
+		FRotator Rotation;
+		if (PC->GetSightRayHitLocation(HitLocation))
+		{
+			// Setting up the rotation and location of the spawn point for the rocket
+			Location = GetActorLocation() + (GetActorForwardVector() * 100);
+			Rotation = (HitLocation - (Location)).Rotation();
+		}
+		else
+		{
+			// Setting up the rotation and location of the spawn point for the rocket
+			Location = GetActorLocation() + (GetActorForwardVector() * 100);
+			Rotation = GetControlRotation();
+			Rotation.Pitch += 1.f;
+		}
+
+		FTransform ProjectileTransform = FTransform(Rotation, Location);
+
+		ServerFireProjectile(ProjectileTransform);
+
+			//// Spawn the rocket using the rocket blueprint
+			ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
+			FVector ShootDirection = ProjectileTransform.GetRotation().GetForwardVector();
+			Print("CLIENT ROTATION:   " + ShootDirection.ToString());
+			Rocket->LaunchProjectile(ShootDirection);
+			Print("CLIENT SPAWN:   " + Rocket->GetVelocity().ToString());
+			//Rocket->SetReplicates(true);
+			//Rocket->bAlwaysRelevant = true;
+			//Rocket->bReplicateMovement = true;
+
+			//Ammo -= 1;
+
+			//FTimerHandle UnusedHandle;
+			//GetWorldTimerManager().SetTimer(UnusedHandle, this, &ADefenderCharacter::Reload, RechargeTime, false);
+
 	}
-	else
+
+}
+
+bool ADefenderCharacter::ServerFireProjectile_Validate(FTransform ProjectileTransform)
+{
+	return true;
+}
+
+void ADefenderCharacter::ServerFireProjectile_Implementation(FTransform ProjectileTransform)
+{
+	//FTransform SpawnTM(ShootDir, Origin);
+	FVector ShootDirection = ProjectileTransform.GetRotation().GetForwardVector();
+	Print("SERVER ROTATION:   " + ShootDirection.ToString());
+	ARocket* Rocket = Cast<ARocket>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, RocketBlueprint, ProjectileTransform));
+	if (Rocket)
 	{
-		// Setting up the rotation and location of the spawn point for the rocket
-		Location = GetActorLocation() + (GetActorForwardVector() * 100);
-		Rotation = GetControlRotation();
-		Rotation.Pitch += 1.f;
+		Rocket->Instigator = Instigator;
+		Rocket->SetOwner(this);
+		Rocket->LaunchProjectile(ShootDirection);
+		Rocket->SetReplicates(true);
+		Rocket->bAlwaysRelevant = true;
+		Rocket->bReplicateMovement = true;
+
+		UGameplayStatics::FinishSpawningActor(Rocket, ProjectileTransform);
+
+		Print("SERVER SPAWN:   " + Rocket->GetVelocity().ToString());
+
 	}
-
-	FTransform ProjectileTransform = FTransform(Rotation, Location, FVector(0));
-
-	// Spawn the rocket using the rocket blueprint
-	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
-	Rocket->LaunchProjectile(LaunchSpeed);
-	Rocket->SetReplicates(true);
-	Rocket->bAlwaysRelevant = true;
-	Rocket->bReplicateMovement = true;
-
 }
 
 void ADefenderCharacter::ChangeTeam()
@@ -90,4 +133,24 @@ void ADefenderCharacter::ChangeTeam()
 void ADefenderCharacter::SetupMovementComponent()
 {
 	Super::SetupMovementComponent();
+}
+
+bool ADefenderCharacter::CanFire()
+{
+	return Ammo > 0;
+}
+
+void ADefenderCharacter::Reload()
+{
+	Ammo++;
+}
+
+int ADefenderCharacter::GetCurrentAmmo()
+{
+	return Ammo;
+}
+
+void ADefenderCharacter::Print(FString Message)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
 }

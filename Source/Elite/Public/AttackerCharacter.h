@@ -62,4 +62,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = Firing)
 	UParticleSystem* RailBeam;
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void CreateRailParticle(FVector Start, FVector End, FHitResult HitResult);
 };

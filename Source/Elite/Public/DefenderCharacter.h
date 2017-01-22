@@ -38,7 +38,7 @@ public:
 	void OnFire();
 
 	UPROPERTY(EditAnywhere, Category = Attributes)
-	int Health = 1;
+	int Health = 3;
 
 	void ChangeTeam();
 

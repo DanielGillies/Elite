@@ -25,6 +25,13 @@ public:
 	/** update velocity on client */
 	virtual void PostNetReceiveVelocity(const FVector& NewVelocity) override;
 
+	/** handle hit */
+	UFUNCTION()
+	void OnImpact(const FHitResult& HitResult);
+
+	/** trigger explosion */
+	void Explode(const FHitResult& Impact);
+
 private:
 	/** movement component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)

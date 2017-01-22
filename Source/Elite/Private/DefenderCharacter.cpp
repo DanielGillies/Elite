@@ -47,12 +47,6 @@ void ADefenderCharacter::OnFire()
 {
 	if (CanFire())
 	{
-		// Set up SpawnParams for rocket
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = Instigator;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
 		// Set up Player Controller to access functions
 		AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
 
@@ -79,11 +73,11 @@ void ADefenderCharacter::OnFire()
 		ServerFireProjectile(ProjectileTransform);
 
 			//// Spawn the rocket using the rocket blueprint
-			ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
-			FVector ShootDirection = ProjectileTransform.GetRotation().GetForwardVector();
-			Print("CLIENT ROTATION:   " + ShootDirection.ToString());
-			Rocket->LaunchProjectile(ShootDirection);
-			Print("CLIENT SPAWN:   " + Rocket->GetVelocity().ToString());
+			//ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
+			//FVector ShootDirection = ProjectileTransform.GetRotation().GetForwardVector();
+			//Print("CLIENT ROTATION:   " + ShootDirection.ToString());
+			//Rocket->LaunchProjectile(ShootDirection);
+			//Print("CLIENT SPAWN:   " + Rocket->GetVelocity().ToString());
 			//Rocket->SetReplicates(true);
 			//Rocket->bAlwaysRelevant = true;
 			//Rocket->bReplicateMovement = true;
@@ -104,20 +98,25 @@ bool ADefenderCharacter::ServerFireProjectile_Validate(FTransform ProjectileTran
 
 void ADefenderCharacter::ServerFireProjectile_Implementation(FTransform ProjectileTransform)
 {
+
+	// Set up SpawnParams for rocket
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = Instigator;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
 	//FTransform SpawnTM(ShootDir, Origin);
 	FVector ShootDirection = ProjectileTransform.GetRotation().GetForwardVector();
 	Print("SERVER ROTATION:   " + ShootDirection.ToString());
-	ARocket* Rocket = Cast<ARocket>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, RocketBlueprint, ProjectileTransform));
+	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
 	if (Rocket)
 	{
-		Rocket->Instigator = Instigator;
-		Rocket->SetOwner(this);
 		Rocket->LaunchProjectile(ShootDirection);
 		Rocket->SetReplicates(true);
 		Rocket->bAlwaysRelevant = true;
 		Rocket->bReplicateMovement = true;
 
-		UGameplayStatics::FinishSpawningActor(Rocket, ProjectileTransform);
+		//UGameplayStatics::FinishSpawningActor(Rocket, ProjectileTransform);
 
 		Print("SERVER SPAWN:   " + Rocket->GetVelocity().ToString());
 

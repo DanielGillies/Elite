@@ -2,6 +2,7 @@
 
 #include "Elite.h"
 #include "../Public/Rocket.h"
+#include "../Public/DefenderCharacter.h"
 
 
 // Sets default values
@@ -30,8 +31,8 @@ ARocket::ARocket()
 
 	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(FName("Movement Component"), TEXT("ProjectileComp"));
 	MovementComp->UpdatedComponent = CollisionComp;
-	MovementComp->InitialSpeed = 2000.0f;
-	MovementComp->MaxSpeed = 2000.0f;
+	MovementComp->InitialSpeed = 5000.0f;
+	MovementComp->MaxSpeed = 5000.0f;
 	MovementComp->bRotationFollowsVelocity = true;
 	MovementComp->ProjectileGravityScale = 0.f;
 
@@ -40,6 +41,10 @@ ARocket::ARocket()
 	SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
 	bReplicates = true;
 	bReplicateMovement = true;
+
+
+	MovementComp->OnProjectileStop.AddDynamic(this, &ARocket::OnImpact);
+	CollisionComp->MoveIgnoreActors.Add(Instigator);
 	
 
 	//UE_LOG(LogTemp, Warning, TEXT("%s"), *CollisionComp->GetName());
@@ -77,4 +82,47 @@ void ARocket::PostNetReceiveVelocity(const FVector& NewVelocity)
 	{
 		MovementComp->Velocity = NewVelocity;
 	}
+}
+
+void ARocket::OnImpact(const FHitResult& HitResult)
+{
+	if (Role == ROLE_Authority)
+	{
+		Explode(HitResult);
+		//DisableAndDestroy();
+	}
+}
+
+void ARocket::Explode(const FHitResult& Impact)
+{
+	ADefenderCharacter *HitCharacter = Cast<ADefenderCharacter>(Impact.GetActor());
+	FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *msg)
+	/*if (ParticleComp)
+	{
+		ParticleComp->Deactivate();
+	}*/
+
+	// effects and damage origin shouldn't be placed inside mesh at impact point
+	const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
+
+	/*if (WeaponConfig.ExplosionDamage > 0 && WeaponConfig.ExplosionRadius > 0 && WeaponConfig.DamageType)
+	{
+		UGameplayStatics::ApplyRadialDamage(this, WeaponConfig.ExplosionDamage, NudgedImpactLocation, WeaponConfig.ExplosionRadius, WeaponConfig.DamageType, TArray<AActor*>(), this, MyController.Get());
+	}
+
+	if (ExplosionTemplate)
+	{
+		FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), NudgedImpactLocation);
+		AShooterExplosionEffect* const EffectActor = GetWorld()->SpawnActorDeferred<AShooterExplosionEffect>(ExplosionTemplate, SpawnTransform);
+		if (EffectActor)
+		{
+			EffectActor->SurfaceHit = Impact;
+			UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
+		}
+	}
+
+	bExploded = true;*/
+	this->Destroy();
+
 }

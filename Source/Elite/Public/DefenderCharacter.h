@@ -37,9 +37,6 @@ public:
 	UFUNCTION()
 	void OnFire();
 
-	UPROPERTY(EditAnywhere, Category = Attributes)
-	int Health = 3;
-
 	void ChangeTeam();
 
 	virtual void SetupMovementComponent() override;

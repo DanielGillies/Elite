@@ -35,9 +35,6 @@ public:
 
 	UFUNCTION()
 	void OnFire();
-
-	UPROPERTY(EditAnywhere, Category = Attributes)
-	int Health = 3;
 	
 	void ChangeTeam();
 
@@ -65,4 +62,15 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
 	void CreateRailParticle(FVector Start, FVector End, FHitResult HitResult);
+
+	UFUNCTION(Server, unreliable, WithValidation)
+	void ServerFireRail(FVector Start, FVector End);
+
+	void CheckIfHitEnemy(FHitResult HitResult);
+
+	void ProcessInstantHit(const FHitResult& HitResult, const FVector& Start, const FVector& End);
+
+	void ProcessHit_Confirmed(const FHitResult& HitResult, const FVector& Start, const FVector& End);
+
+	bool ShouldDealDamage(AActor* TestActor) const;
 };

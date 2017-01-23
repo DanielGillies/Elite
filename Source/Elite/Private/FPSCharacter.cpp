@@ -77,16 +77,26 @@ void AFPSCharacter::MoveForward(float Value)
 		// Move in that direction
 		const FVector Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
 
-		if (bSprintActive)
-		{
-			GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-		}
-		else
-		{
-			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		}
+		ServerRequestSprint(bSprintActive);
 
 		AddMovementInput(Direction, Value);
+	}
+}
+
+bool AFPSCharacter::ServerRequestSprint_Validate(bool bSprintActive)
+{
+	return true;
+}
+
+void AFPSCharacter::ServerRequestSprint_Implementation(bool bSprintActive)
+{
+	if (bSprintActive)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 }
 
@@ -100,7 +110,7 @@ void AFPSCharacter::MoveRight(float Value)
 		
 		if (bSprintActive)
 		{
-			// Stafing is much slower while sprinting
+			// Strafing is much slower while sprinting
 			AddMovementInput(Direction, Value * StrafeSpeedMult);
 		}
 		else
@@ -113,19 +123,44 @@ void AFPSCharacter::MoveRight(float Value)
 
 void AFPSCharacter::Jump()
 {
+	//GetCharacterMovement()->AddImpulse(GetActorUpVector() * JumpForce, true);
+
 	FVector WallImpact;
 	if (CheckForWalls(WallImpact))
 	{
-		GetCharacterMovement()->AddImpulse((WallImpact + (GetActorUpVector() * FVector(.7f))) * WallJumpForce, true);
+		ServerRequestWalljump(WallImpact);
 	}
 	if (!GetCharacterMovement()->IsFalling())
 	{
-		GetCharacterMovement()->AddImpulse(GetActorUpVector() * JumpForce, true);
+		//ACharacter::Jump();
+		ServerRequestJump();
+		//GetCharacterMovement()->AddImpulse(GetActorUpVector() * JumpForce, true);
 	}
 	else if (GetCharacterMovement()->IsFalling())
 	{
 		bSprintActive = true;
+		UE_LOG(LogTemp, Warning, TEXT("%s"), bSprintActive ? *FString("True") : *FString("False"));
 	}
+}
+
+bool AFPSCharacter::ServerRequestWalljump_Validate(FVector WallImpact)
+{
+	return true;
+}
+
+void AFPSCharacter::ServerRequestWalljump_Implementation(FVector WallImpact)
+{
+	GetCharacterMovement()->AddImpulse((WallImpact + (GetActorUpVector() * FVector(.7f))) * WallJumpForce, true);
+}
+
+bool AFPSCharacter::ServerRequestJump_Validate()
+{
+	return true;
+}
+
+void AFPSCharacter::ServerRequestJump_Implementation()
+{
+	GetCharacterMovement()->AddImpulse(GetActorUpVector() * JumpForce, true);
 }
 
 void AFPSCharacter::JumpReleased()
@@ -195,5 +230,26 @@ bool AFPSCharacter::CheckRightForWalls(FHitResult& OutHitResult)
 	FVector CurrentLocation = GetTransform().GetLocation();
 
 	return GetWorld()->LineTraceSingleByObjectType(OutHitResult, CurrentLocation, CurrentLocation + GetActorRightVector() * WallCheckRadius, FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic));
+}
 
+float AFPSCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
+{
+	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	if (ActualDamage > 0.f)
+	{
+		Health -= ActualDamage;
+		// If the damage kills us, set lifespan to 0 which destroys actor
+		if (Health <= 0.f)
+		{
+			Cast<AMyPlayerController>(GetController())->Die(this);
+		}
+	}
+	return ActualDamage;
+}
+
+void AFPSCharacter::Die(AMyPlayerController* PC)
+{
+	SetLifeSpan(0.001f);
+	//FTimerHandle UnusedHandle;
+	//GetWorldTimerManager().SetTimer(UnusedHandle, this, PC->, RechargeTime, false);
 }

@@ -3,6 +3,7 @@
 #include "Elite.h"
 #include "../Public/Rocket.h"
 #include "../Public/DefenderCharacter.h"
+#include "../Public/AttackerCharacter.h"
 
 
 // Sets default values
@@ -95,34 +96,51 @@ void ARocket::OnImpact(const FHitResult& HitResult)
 
 void ARocket::Explode(const FHitResult& Impact)
 {
-	ADefenderCharacter *HitCharacter = Cast<ADefenderCharacter>(Impact.GetActor());
-	FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *msg)
-	/*if (ParticleComp)
+	// Only Check what we hit if it is a player
+	if (Cast<AFPSCharacter>(Impact.GetActor()))
 	{
-		ParticleComp->Deactivate();
-	}*/
-
-	// effects and damage origin shouldn't be placed inside mesh at impact point
-	const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
-
-	/*if (WeaponConfig.ExplosionDamage > 0 && WeaponConfig.ExplosionRadius > 0 && WeaponConfig.DamageType)
-	{
-		UGameplayStatics::ApplyRadialDamage(this, WeaponConfig.ExplosionDamage, NudgedImpactLocation, WeaponConfig.ExplosionRadius, WeaponConfig.DamageType, TArray<AActor*>(), this, MyController.Get());
-	}
-
-	if (ExplosionTemplate)
-	{
-		FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), NudgedImpactLocation);
-		AShooterExplosionEffect* const EffectActor = GetWorld()->SpawnActorDeferred<AShooterExplosionEffect>(ExplosionTemplate, SpawnTransform);
-		if (EffectActor)
+		if (Cast<AAttackerCharacter>(Impact.GetActor()))
 		{
-			EffectActor->SurfaceHit = Impact;
-			UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
+			AAttackerCharacter* HitCharacter = Cast<AAttackerCharacter>(Impact.GetActor());
+			//FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
+			//UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
+			float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+			UE_LOG(LogTemp, Warning, TEXT("%f"), DamageTaken);
 		}
-	}
+		else
+		{
+			ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(Impact.GetActor());
+			//FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
+			//UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
+		}
+		//ADefenderCharacter *HitCharacter = Cast<ADefenderCharacter>(Impact.GetActor());
+		//FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
+		/*if (ParticleComp)
+		{
+			ParticleComp->Deactivate();
+		}*/
 
-	bExploded = true;*/
+		// effects and damage origin shouldn't be placed inside mesh at impact point
+		const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
+
+		/*if (WeaponConfig.ExplosionDamage > 0 && WeaponConfig.ExplosionRadius > 0 && WeaponConfig.DamageType)
+		{
+			UGameplayStatics::ApplyRadialDamage(this, WeaponConfig.ExplosionDamage, NudgedImpactLocation, WeaponConfig.ExplosionRadius, WeaponConfig.DamageType, TArray<AActor*>(), this, MyController.Get());
+		}
+
+		if (ExplosionTemplate)
+		{
+			FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), NudgedImpactLocation);
+			AShooterExplosionEffect* const EffectActor = GetWorld()->SpawnActorDeferred<AShooterExplosionEffect>(ExplosionTemplate, SpawnTransform);
+			if (EffectActor)
+			{
+				EffectActor->SurfaceHit = Impact;
+				UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
+			}
+		}
+
+		bExploded = true;*/
+	}
 	this->Destroy();
 
 }

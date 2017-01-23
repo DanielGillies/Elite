@@ -19,7 +19,7 @@ public:
 
 	void Tick(float DeltaTime);
 
-	//AFPSCharacter* GetControlledPlayer() const;
+	AFPSCharacter* GetControlledPlayer() const;
 
 	bool GetLookDirection(FVector2D ScreenLocation, FVector& LookDirection) const;
 
@@ -27,6 +27,13 @@ public:
 
 	bool GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation) const;
 
-	bool ChangeTeam(bool FromAttacker);
+	UFUNCTION(reliable, server, WithValidation)
+	void ChangeTeam(AFPSCharacter* Caller);
 	
+	void Die(AFPSCharacter* Caller);
+
+	UFUNCTION(reliable, server, WithValidation)
+	void ServerRespawn();
+
+	void Respawn();
 };

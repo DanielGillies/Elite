@@ -14,6 +14,7 @@ ADefenderCharacter::ADefenderCharacter()
 	SetupMovementComponent();
 
 	Ammo = MaxAmmo;
+	Health = 1;
 }
 
 // Called when the game starts or when spawned
@@ -107,7 +108,6 @@ void ADefenderCharacter::ServerFireProjectile_Implementation(FTransform Projecti
 
 	//FTransform SpawnTM(ShootDir, Origin);
 	FVector ShootDirection = ProjectileTransform.GetRotation().GetForwardVector();
-	Print("SERVER ROTATION:   " + ShootDirection.ToString());
 	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
 	if (Rocket)
 	{
@@ -116,9 +116,6 @@ void ADefenderCharacter::ServerFireProjectile_Implementation(FTransform Projecti
 		Rocket->bAlwaysRelevant = true;
 		Rocket->bReplicateMovement = true;
 
-		//UGameplayStatics::FinishSpawningActor(Rocket, ProjectileTransform);
-
-		Print("SERVER SPAWN:   " + Rocket->GetVelocity().ToString());
 
 	}
 }
@@ -126,7 +123,7 @@ void ADefenderCharacter::ServerFireProjectile_Implementation(FTransform Projecti
 void ADefenderCharacter::ChangeTeam()
 {
 	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
-	PC->ChangeTeam(false);
+	PC->ChangeTeam(this);
 }
 
 void ADefenderCharacter::SetupMovementComponent()

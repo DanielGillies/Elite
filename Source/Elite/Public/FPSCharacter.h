@@ -15,7 +15,7 @@ class ELITE_API AFPSCharacter : public ACharacter
 
 private:
 	UPROPERTY(EditAnywhere, Category = Movement)
-	float StrafeSpeedMult = .3f;
+	float StrafeSpeedMult = 1.f;
 
 	UPROPERTY(EditAnywhere, Category = Movement)
 	float WallCheckRadius = 50.f;
@@ -24,7 +24,16 @@ private:
 	float WallJumpForce = 500.f;
 
 	UPROPERTY(EditAnywhere, Category = Movement)
-	float JumpForce = 300.f;
+	float JumpForce = 350.f;
+
+protected:
+	UPROPERTY(EditAnywhere, Category = Attributes)
+	int Health = 3;
+
+	UPROPERTY(EditAnywhere, Category = Attributes)
+	float RespawnDelay = 4.0f;
+
+	void Die(class AMyPlayerController* PC);
 
 public:
 
@@ -71,11 +80,11 @@ public:
 
 	// Walk speed multiplier
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CustomMovement)
-	float WalkSpeed = 800;
+	float WalkSpeed = 600;
 
 	// Sprint speed multiplier
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CustomMovement)
-	float SprintSpeed = 1500;
+	float SprintSpeed = 1000;
 
 	// Sprinting Flag
 	bool bSprintActive = false;
@@ -91,6 +100,17 @@ public:
 
 	void ChangeTeam();
 
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser) override;
+
 	virtual void SetupMovementComponent();
+
+	UFUNCTION(unreliable, server, WithValidation)
+	void ServerRequestSprint(bool bSprintActive);
+
+	UFUNCTION(unreliable, server, WithValidation)
+	void ServerRequestWalljump(FVector WallImpact);
+
+	UFUNCTION(unreliable, server, WithValidation)
+	void ServerRequestJump();
 
 };

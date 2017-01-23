@@ -2,6 +2,7 @@
 
 #include "Elite.h"
 #include "../Public/AttackerCharacter.h"
+#include "../Public/DefenderCharacter.h"
 #include "../Public/MyPlayerController.h"
 #include "../Public/Rocket.h"
 
@@ -12,6 +13,7 @@ AAttackerCharacter::AAttackerCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Ammo = MaxAmmo;
+	Health = 3;
 
 	SetupMovementComponent();
 }
@@ -49,35 +51,100 @@ void AAttackerCharacter::OnFire()
 		FVector Start = PC->PlayerCameraManager->GetCameraLocation() - FVector(0, 0, 10);;
 		FVector End = Start + PC->GetActorForwardVector() * 5000;
 
-		// Store the hit result
-		FHitResult HitResult;
-
-		// Set up trace params
-		const FName TraceTag("MyTraceTag");
-		GetWorld()->DebugDrawTraceTag = TraceTag;
-		FCollisionQueryParams TraceParameters;
-		TraceParameters.TraceTag = TraceTag;
-		/*TraceParameters.bTraceComplex = true;
-		TraceParameters.bTraceAsyncScene = true;*/
-
-		// Do line trace
-		GetWorld()->LineTraceSingleByChannel(
-			HitResult,
-			Start,
-			End,
-			ECollisionChannel::ECC_Visibility,
-			FCollisionQueryParams()
-		);
-
-		CreateRailParticle(Start, End, HitResult);
+		ServerFireRail(Start, End);
 
 	}
+}
+
+void AAttackerCharacter::ServerFireRail_Implementation(FVector Start, FVector End)
+{
+	// Store the hit result
+	FHitResult HitResult;
+
+	// Set up trace params
+	const FName TraceTag("MyTraceTag");
+	GetWorld()->DebugDrawTraceTag = TraceTag;
+	FCollisionQueryParams TraceParameters;
+	TraceParameters.TraceTag = TraceTag;
+	TraceParameters.bTraceComplex = true;
+	TraceParameters.bTraceAsyncScene = true;
+
+	// Do line trace
+	GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		Start,
+		End,
+		ECollisionChannel::ECC_Visibility,
+		FCollisionQueryParams()
+	);
+
+	ProcessInstantHit(HitResult, Start, End);
+
+	//CreateRailParticle(Start, End, HitResult);
+
+	UE_LOG(LogTemp, Warning, TEXT("%s"), HitResult.bBlockingHit ? *FString("Yes") : *FString("no"));
+
+}
+
+void AAttackerCharacter::ProcessInstantHit(const FHitResult& HitResult, const FVector& Start, const FVector& End)
+{
+	if (IsLocallyControlled() && GetNetMode() == NM_Client)
+	{
+		// Hit something that is being controlled by the server
+		if (HitResult.GetActor() && HitResult.GetActor()->GetRemoteRole() == ROLE_Authority)
+		{
+			//ServerNotifyHit(HitResult, End);
+		}
+		else if (HitResult.GetActor() == NULL)
+		{
+			if (HitResult.bBlockingHit)
+			{
+				//ServerNotifyHit(HitResult, End);
+			}
+			else
+			{
+				//ServerNotifyMiss(End);
+			}
+		}
+		// Process a confirmed hit
+		//ProcessHit_Confirmed(HitResult, Start, End);
+	}
+}
+
+void AAttackerCharacter::ProcessHit_Confirmed(const FHitResult& HitResult, const FVector& Start, const FVector& End)
+{
+	if (ShouldDealDamage(HitResult.GetActor()))
+	{
+		ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
+		float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+	}
+}
+
+bool AAttackerCharacter::ShouldDealDamage(AActor* TestActor) const
+{
+	// if we're an actor on the server, or the actor's role is authoritative, we should register damage
+	if (TestActor && Cast<ADefenderCharacter>(TestActor))
+	{
+		if (GetNetMode() != NM_Client ||
+			TestActor->Role == ROLE_Authority ||
+			TestActor->bTearOff)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool AAttackerCharacter::ServerFireRail_Validate(FVector Start, FVector End)
+{
+	return true;
 }
 
 void AAttackerCharacter::ChangeTeam()
 {
 	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
-	PC->ChangeTeam(true);
+	PC->ChangeTeam(this);
 }
 
 void AAttackerCharacter::SetupMovementComponent()
@@ -110,12 +177,12 @@ void AAttackerCharacter::CreateRailParticle_Implementation(FVector Start, FVecto
 {
 	// Spawn rail
 	UParticleSystemComponent* Rail = UGameplayStatics::SpawnEmitterAtLocation(this, RailBeam, Start);
-	UE_LOG(LogTemp, Warning, TEXT("SHOOT"));
 	// If we hit something, draw rail from where we shot to where we hit
 	if (HitResult.bBlockingHit)
 	{
 		Rail->SetBeamSourcePoint(0, Start, 0);
 		Rail->SetBeamTargetPoint(0, HitResult.Location, 0);
+		CheckIfHitEnemy(HitResult);
 	}
 	// Else draw to end of raytrace
 	else
@@ -128,4 +195,16 @@ void AAttackerCharacter::CreateRailParticle_Implementation(FVector Start, FVecto
 bool AAttackerCharacter::CreateRailParticle_Validate(FVector Start, FVector End, FHitResult HitResult)
 {
 	return true;
+}
+
+void AAttackerCharacter::CheckIfHitEnemy(FHitResult HitResult)
+{
+	if (Cast<AFPSCharacter>(HitResult.GetActor()))
+	{
+		if (Cast<ADefenderCharacter>(HitResult.GetActor()))
+		{
+			ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
+			float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+		}
+	}
 }

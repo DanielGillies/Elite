@@ -48,98 +48,90 @@ void AAttackerCharacter::OnFire()
 		AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
 
 		// Start and end vectors for line trace
-		FVector Start = PC->PlayerCameraManager->GetCameraLocation() - FVector(0, 0, 10);;
+		FVector Start = (PC->PlayerCameraManager->GetCameraLocation() + (PC->GetActorForwardVector() * 50)) - FVector(0, 0, 10);
 		FVector End = Start + PC->GetActorForwardVector() * 5000;
 
-		ServerFireRail(Start, End);
+		/*ServerFireRail(Start, End);*/
 
-	}
-}
+		// Store the hit result
+		FHitResult HitResult;
 
-void AAttackerCharacter::ServerFireRail_Implementation(FVector Start, FVector End)
-{
-	// Store the hit result
-	FHitResult HitResult;
+		// Set up trace params
+		const FName TraceTag("MyTraceTag");
+		GetWorld()->DebugDrawTraceTag = TraceTag;
+		FCollisionQueryParams TraceParameters;
+		TraceParameters.TraceTag = TraceTag;
+		TraceParameters.AddIgnoredActor(PC->GetPawn());
+		TraceParameters.bTraceComplex = false;
+		TraceParameters.bTraceAsyncScene = false;
 
-	// Set up trace params
-	const FName TraceTag("MyTraceTag");
-	GetWorld()->DebugDrawTraceTag = TraceTag;
-	FCollisionQueryParams TraceParameters;
-	TraceParameters.TraceTag = TraceTag;
-	TraceParameters.bTraceComplex = true;
-	TraceParameters.bTraceAsyncScene = true;
+		// Do line trace
+		GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_PhysicsBody,
+			FCollisionQueryParams()
+		);
 
-	// Do line trace
-	GetWorld()->LineTraceSingleByChannel(
-		HitResult,
-		Start,
-		End,
-		ECollisionChannel::ECC_Visibility,
-		FCollisionQueryParams()
-	);
-
-	ProcessInstantHit(HitResult, Start, End);
-
-	//CreateRailParticle(Start, End, HitResult);
-
-	UE_LOG(LogTemp, Warning, TEXT("%s"), HitResult.bBlockingHit ? *FString("Yes") : *FString("no"));
-
-}
-
-void AAttackerCharacter::ProcessInstantHit(const FHitResult& HitResult, const FVector& Start, const FVector& End)
-{
-	if (IsLocallyControlled() && GetNetMode() == NM_Client)
-	{
-		// Hit something that is being controlled by the server
-		if (HitResult.GetActor() && HitResult.GetActor()->GetRemoteRole() == ROLE_Authority)
+		UE_LOG(LogTemp, Warning, TEXT("%s"), HitResult.bBlockingHit ? *FString("Yes") : *FString("no"));
+		if (HitResult.bBlockingHit)
 		{
-			//ServerNotifyHit(HitResult, End);
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *HitResult.GetActor()->GetName());
 		}
-		else if (HitResult.GetActor() == NULL)
-		{
-			if (HitResult.bBlockingHit)
-			{
-				//ServerNotifyHit(HitResult, End);
-			}
-			else
-			{
-				//ServerNotifyMiss(End);
-			}
-		}
-		// Process a confirmed hit
-		//ProcessHit_Confirmed(HitResult, Start, End);
+
+		ServerNotifyShot(HitResult, Start, End);
+
 	}
 }
 
-void AAttackerCharacter::ProcessHit_Confirmed(const FHitResult& HitResult, const FVector& Start, const FVector& End)
-{
-	if (ShouldDealDamage(HitResult.GetActor()))
-	{
-		ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
-		float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
-	}
-}
-
-bool AAttackerCharacter::ShouldDealDamage(AActor* TestActor) const
-{
-	// if we're an actor on the server, or the actor's role is authoritative, we should register damage
-	if (TestActor && Cast<ADefenderCharacter>(TestActor))
-	{
-		if (GetNetMode() != NM_Client ||
-			TestActor->Role == ROLE_Authority ||
-			TestActor->bTearOff)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool AAttackerCharacter::ServerFireRail_Validate(FVector Start, FVector End)
+bool AAttackerCharacter::ServerNotifyShot_Validate(FHitResult HitResult, FVector Start, FVector End)
 {
 	return true;
 }
+
+void AAttackerCharacter::ServerNotifyShot_Implementation(FHitResult HitResult, FVector Start, FVector End)
+{
+	// Check if we hit an enemy
+	CreateRailParticle(Start, End, HitResult);
+}
+
+//bool AAttackerCharacter::ServerFireRail_Validate(FVector Start, FVector End)
+//{
+//	return true;
+//}
+
+
+//void AAttackerCharacter::ServerFireRail_Implementation(FVector Start, FVector End)
+//{
+//	// Store the hit result
+//	FHitResult HitResult;
+//
+//	// Set up trace params
+//	const FName TraceTag("MyTraceTag");
+//	GetWorld()->DebugDrawTraceTag = TraceTag;
+//	FCollisionQueryParams TraceParameters;
+//	TraceParameters.TraceTag = TraceTag;
+//	TraceParameters.bTraceComplex = true;
+//	TraceParameters.bTraceAsyncScene = true;
+//
+//	// Do line trace
+//	GetWorld()->LineTraceSingleByChannel(
+//		HitResult,
+//		Start,
+//		End,
+//		ECollisionChannel::ECC_Visibility,
+//		FCollisionQueryParams()
+//	);
+//
+//	ProcessInstantHit(HitResult, Start, End);
+//
+//	//CreateRailParticle(Start, End, HitResult);
+//
+//	//UE_LOG(LogTemp, Warning, TEXT("%s"), HitResult.bBlockingHit ? *FString("Yes") : *FString("no"));
+//
+//}
+
 
 void AAttackerCharacter::ChangeTeam()
 {
@@ -175,6 +167,15 @@ void AAttackerCharacter::Reload()
 
 void AAttackerCharacter::CreateRailParticle_Implementation(FVector Start, FVector End, FHitResult HitResult)
 {
+	FString netmode = "";
+	if (GetNetMode() == NM_Client)
+		netmode = "CLIENT";
+	else if (GetNetMode() == NM_ListenServer)
+		netmode = "LISTEN";
+	else if (GetNetMode() == NM_DedicatedServer)
+		netmode = "SERVER";
+
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *netmode);
 	// Spawn rail
 	UParticleSystemComponent* Rail = UGameplayStatics::SpawnEmitterAtLocation(this, RailBeam, Start);
 	// If we hit something, draw rail from where we shot to where we hit

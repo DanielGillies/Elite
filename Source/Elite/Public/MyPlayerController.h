@@ -15,6 +15,8 @@ class ELITE_API AMyPlayerController : public APlayerController
 
 public:
 
+	bool Attacking;
+
 	void BeginPlay();
 
 	void Tick(float DeltaTime);

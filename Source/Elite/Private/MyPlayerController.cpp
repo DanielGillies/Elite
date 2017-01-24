@@ -9,6 +9,22 @@
 void AMyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (Cast<AFPSCharacter>(GetPawn()))
+	{
+		if (Cast<AAttackerCharacter>(GetPawn()))
+		{
+			Attacking = true;
+		}
+		else
+		{
+			Attacking = false;
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayerController not possessing a player"));
+	}
 	//auto ControlledPlayer = GetControlledPlayer();
 
 	//if (!ControlledPlayer)
@@ -49,6 +65,7 @@ bool AMyPlayerController::GetLookVectorHitLocation(FVector LookDirection, FVecto
 	auto StartLocation = PlayerCameraManager->GetCameraLocation();
 	auto EndLocation = StartLocation + LookDirection * 100000;
 	// If Raycast collides with something
+	// TODO: Maybe change this to ECC_Camera?
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility))
 	{
 		HitLocation = HitResult.Location;
@@ -106,9 +123,9 @@ void AMyPlayerController::ServerRespawn_Implementation()
 	UE_LOG(LogTemp, Warning, TEXT("POST"));
 	//APawn* OldPawn = PC->GetPawn();
 
-	if (Cast<ADefenderCharacter>(GetPawn()))
+	if (!Attacking)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ATTACKER SWITCHING"));
+		UE_LOG(LogTemp, Warning, TEXT("Respawning Defender"));
 		TSubclassOf<ADefenderCharacter> DefenderBP = GameMode->DefenderBlueprint;
 		ADefenderCharacter* NewCharacter = (ADefenderCharacter*)GetWorld()->SpawnActor(DefenderBP, &SpawnLocation, &FRotator::ZeroRotator);
 		UnPossess();
@@ -117,7 +134,7 @@ void AMyPlayerController::ServerRespawn_Implementation()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("DEFENDER SWITCHING"));
+		UE_LOG(LogTemp, Warning, TEXT("Respawning Attacker"));
 		TSubclassOf<AAttackerCharacter> AttackerBP = GameMode->AttackerBlueprint;
 		AAttackerCharacter* NewCharacter = (AAttackerCharacter*)GetWorld()->SpawnActor(AttackerBP, &SpawnLocation, &FRotator::ZeroRotator);
 		UnPossess();
@@ -127,12 +144,13 @@ void AMyPlayerController::ServerRespawn_Implementation()
 
 void AMyPlayerController::ChangeTeam_Implementation(AFPSCharacter* Caller)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s"), Attacking ? *FString("Attacking") : *FString("Defending"));
 	FVector SpawnLocation = FVector(0, 0, 0);
 	AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
 	AMyPlayerController* PC = Cast<AMyPlayerController>(Caller->GetController());
 	APawn* OldPawn = PC->GetPawn();
 
-	if (Cast<ADefenderCharacter>(PC->GetPawn()))
+	if (!Attacking)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("DEFENDER SWITCHING"));
 		TSubclassOf<AAttackerCharacter> AttackerBP = GameMode->AttackerBlueprint;
@@ -148,9 +166,8 @@ void AMyPlayerController::ChangeTeam_Implementation(AFPSCharacter* Caller)
 		PC->UnPossess();
 		PC->Possess(NewCharacter);
 	}
-
+	Attacking = !Attacking;
 	OldPawn->Destroy();
-	//UE_LOG(LogTemp, Warning, TEXT("CHANGE TEAM %s"), *PC->GetPawn()->GetClass()->GetName());
 }
 
 bool AMyPlayerController::ChangeTeam_Validate(AFPSCharacter* Caller)

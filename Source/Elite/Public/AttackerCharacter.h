@@ -48,7 +48,7 @@ public:
 	int MaxAmmo = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo)
-	float RechargeTime = 1.5f;
+	float RechargeTime = 0.00001f;
 
 	// Calls reload
 	UFUNCTION(BlueprintCallable, Category=Firing)
@@ -63,14 +63,15 @@ public:
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
 	void CreateRailParticle(FVector Start, FVector End, FHitResult HitResult);
 
-	UFUNCTION(Server, unreliable, WithValidation)
-	void ServerFireRail(FVector Start, FVector End);
+	UFUNCTION(Server, Unreliable, WithValidation)
+	void ServerNotifyShot(FHitResult HitResult, FVector Start, FVector End);
+
+	/*UFUNCTION(Server, unreliable, WithValidation)
+	void ServerFireRail(FVector Start, FVector End);*/
 
 	void CheckIfHitEnemy(FHitResult HitResult);
 
-	void ProcessInstantHit(const FHitResult& HitResult, const FVector& Start, const FVector& End);
-
-	void ProcessHit_Confirmed(const FHitResult& HitResult, const FVector& Start, const FVector& End);
-
-	bool ShouldDealDamage(AActor* TestActor) const;
+	/** server notified of miss to show trail FX */
+	/*UFUNCTION(unreliable, server, WithValidation)
+	void ServerNotifyMiss(FVector ShootDir);*/
 };

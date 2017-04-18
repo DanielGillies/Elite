@@ -13,7 +13,13 @@ class ELITE_API AElitePlayerState : public APlayerState
 {
 	GENERATED_BODY()
 	
-	
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Points")
+	int Attacks = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Points")
+	int Rockets = 0;
 	
 	
 };

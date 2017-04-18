@@ -4,6 +4,7 @@
 #include "../Public/Rocket.h"
 #include "../Public/DefenderCharacter.h"
 #include "../Public/AttackerCharacter.h"
+#include "../Public/ElitePlayerState.h"
 
 
 // Sets default values
@@ -105,6 +106,12 @@ void ARocket::Explode(const FHitResult& Impact)
 			//FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
 			//UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
 			float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+			AElitePlayerState* PState = Cast<AElitePlayerState>(Instigator->GetController()->PlayerState);
+			if (PState)
+			{
+				PState->Rockets += 1;
+				UE_LOG(LogTemp, Warning, TEXT("%s hit a rocket on %s -- Has %d rocket hits"), *Instigator->GetName(), *HitCharacter->GetName(), PState->Rockets);
+			}
 			UE_LOG(LogTemp, Warning, TEXT("%f"), DamageTaken);
 		}
 		else

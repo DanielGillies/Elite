@@ -2,6 +2,7 @@
 
 #pragma once
 
+//#include "../Public/MyPlayerController.h"
 #include "GameFramework/PlayerState.h"
 #include "ElitePlayerState.generated.h"
 
@@ -20,6 +21,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Points")
 	int Rockets = 0;
+
+	//AMyPlayerController MyController;
+
+	UFUNCTION(BlueprintCallable, Category = "Team")
+	void SetTeam(int32 Team);
 	
-	
+	void BeginPlay();
+
+	UPROPERTY(BlueprintReadWrite, Category = "Team")
+	int32 MyTeam;
 };

@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "Public/AttackerCharacter.h"
-#include "Public/DefenderCharacter.h"
 #include "GameFramework/GameMode.h"
 #include "EliteGameMode.generated.h"
 
@@ -16,11 +14,9 @@ class ELITE_API AEliteGameMode : public AGameMode
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, Category = Players)
-	TSubclassOf<ADefenderCharacter> DefenderBlueprint;
 
-	UPROPERTY(EditAnywhere, Category = Players)
-	TSubclassOf<AAttackerCharacter> AttackerBlueprint;
+	void PostLogin(APlayerController* NewPlayer) override;
 
+	TArray<APlayerController*> PlayerArray;
 
 };

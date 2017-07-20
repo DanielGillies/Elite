@@ -2,7 +2,23 @@
 
 #include "Elite.h"
 #include "EliteGameMode.h"
+#include "public/EliteGameState.h"
+#include "public/MyPlayerController.h"
+#include "public/ElitePlayerState.h"
+#include "public/ElitePlayerStart.h"
+//
+//AEliteGameMode::AEliteGameMode(const FObjectInitializer &ObjectInitializer)
+//	: Super(ObjectInitializer)
+//{
+//	PlayerStateClass = AElitePlayerState::StaticClass();
+//}
 
 
+void AEliteGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
 
+	PlayerArray.Add(NewPlayer);
 
+	UE_LOG(LogTemp, Warning, TEXT("Num of players is now %d"), PlayerArray.Num());
+}

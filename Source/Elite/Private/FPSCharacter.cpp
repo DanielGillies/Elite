@@ -4,6 +4,7 @@
 #include "../Public/MyPlayerController.h"
 #include "../Public/FPSCharacter.h"
 #include "../Public/Rocket.h"
+#include "../Public/ElitePlayerState.h"
 
 // Sets default values
 AFPSCharacter::AFPSCharacter()
@@ -29,8 +30,6 @@ void AFPSCharacter::SetupMovementComponent()
 void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	UE_LOG(LogTemp, Warning, TEXT("%f"), GetCharacterMovement()->InitialPushForceFactor);
 }
 
 // Called every frame
@@ -57,10 +56,34 @@ void AFPSCharacter::SetupPlayerInputComponent(class UInputComponent* InputCompon
 	InputComponent->BindAction("Jump", IE_Pressed, this, &AFPSCharacter::Jump);
 	InputComponent->BindAction("Jump", IE_Released, this, &AFPSCharacter::JumpReleased);
 
+	InputComponent->BindAction("Fire", IE_Pressed, this, &AFPSCharacter::OnFire);
+
 	//InputComponent->BindAction("Jump", IE_Pressed, this, &AFPSCharacter::OnStartJump);
 	//InputComponent->BindAction("Jump", IE_Released, this, &AFPSCharacter::OnStopJump);
 }
 
+void AFPSCharacter::OnFire()
+{
+	AElitePlayerState* PS = Cast<AElitePlayerState>(GetController()->PlayerState);
+
+
+	int Team = PS->MyTeam;
+
+	UE_LOG(LogTemp, Warning, TEXT("TEAM: %d"), PS->MyTeam);
+
+	//UE_LOG(LogTemp, Warning, TEXT("TEAM: %s"), *PS->GetName());
+
+	if (Team == 1)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FIRING RAIL"));
+		FireRail();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FIRING ROCKET"));
+		FireRocket();
+	}
+}
 
 // Move Forward
 void AFPSCharacter::MoveForward(float Value)
@@ -252,4 +275,188 @@ void AFPSCharacter::Die(AMyPlayerController* PC)
 	SetLifeSpan(0.001f);
 	//FTimerHandle UnusedHandle;
 	//GetWorldTimerManager().SetTimer(UnusedHandle, this, PC->, RechargeTime, false);
+}
+
+/*Rocket Stuff*/
+void AFPSCharacter::FireRocket()
+{
+	if (CanFire())
+	{
+		// Set up Player Controller to access functions
+		AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
+
+		// Getting Rotation from character to 3D world space of xhair
+		FVector HitLocation;
+		FVector Location;
+		FRotator Rotation;
+		if (PC->GetSightRayHitLocation(HitLocation))
+		{
+			// Setting up the rotation and location of the spawn point for the rocket
+			Location = GetActorLocation() + (GetActorForwardVector() * 100);
+			Rotation = (HitLocation - (Location)).Rotation();
+		}
+		else
+		{
+			// Setting up the rotation and location of the spawn point for the rocket
+			Location = GetActorLocation() + (GetActorForwardVector() * 100);
+			Rotation = GetControlRotation();
+			Rotation.Pitch += 1.f;
+		}
+
+		FTransform ProjectileTransform = FTransform(Rotation, Location);
+
+		ServerFireProjectile(ProjectileTransform);
+
+	}
+}
+
+bool AFPSCharacter::ServerFireProjectile_Validate(FTransform ProjectileTransform)
+{
+	return true;
+}
+
+void AFPSCharacter::ServerFireProjectile_Implementation(FTransform ProjectileTransform)
+{
+
+	// Set up SpawnParams for rocket
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = Instigator;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	//FTransform SpawnTM(ShootDir, Origin);
+	FVector ShootDirection = ProjectileTransform.GetRotation().GetForwardVector();
+	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
+	if (Rocket)
+	{
+		Rocket->LaunchProjectile(ShootDirection);
+		Rocket->SetReplicates(true);
+		Rocket->bAlwaysRelevant = true;
+		Rocket->bReplicateMovement = true;
+	}
+}
+
+/*Rail gun stuff*/
+
+void AFPSCharacter::FireRail()
+{
+	if (CanFire())
+	{
+		// Set up Player Controller to access functions
+		AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
+
+		// Start and end vectors for line trace
+		FVector Start = (PC->PlayerCameraManager->GetCameraLocation() + (PC->GetActorForwardVector() * 50)) - FVector(0, 0, 10);
+		FVector End = Start + PC->GetActorForwardVector() * 5000;
+
+		/*ServerFireRail(Start, End);*/
+
+		// Store the hit result
+		FHitResult HitResult;
+
+		// Set up trace params
+		const FName TraceTag("MyTraceTag");
+		GetWorld()->DebugDrawTraceTag = TraceTag;
+		FCollisionQueryParams TraceParameters;
+		TraceParameters.TraceTag = TraceTag;
+		TraceParameters.AddIgnoredActor(PC->GetPawn());
+		TraceParameters.bTraceComplex = false;
+		TraceParameters.bTraceAsyncScene = false;
+
+		// Do line trace
+		GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_PhysicsBody,
+			FCollisionQueryParams()
+		);
+
+		UE_LOG(LogTemp, Warning, TEXT("%s"), HitResult.bBlockingHit ? *FString("Yes") : *FString("no"));
+		if (HitResult.bBlockingHit)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *HitResult.GetActor()->GetName());
+		}
+
+		ServerNotifyShot(HitResult, Start, End);
+
+	}
+}
+
+bool AFPSCharacter::ServerNotifyShot_Validate(FHitResult HitResult, FVector Start, FVector End)
+{
+	return true;
+}
+
+void AFPSCharacter::ServerNotifyShot_Implementation(FHitResult HitResult, FVector Start, FVector End)
+{
+	// Check if we hit an enemy
+	CreateRailParticle(Start, End, HitResult);
+}
+
+bool AFPSCharacter::CanFire()
+{
+	/*if (RailAmmo > 0)
+	{
+		RailAmmo -= 1;
+
+		FTimerHandle UnusedHandle;
+		GetWorldTimerManager().SetTimer(UnusedHandle, this, &AFPSCharacter::Reload, RechargeTime, false);
+		return true;
+	}
+	else
+	{
+		return false;
+	}*/
+	return true;
+}
+
+void AFPSCharacter::Reload()
+{
+	RailAmmo = MaxAmmo;
+}
+
+void AFPSCharacter::CreateRailParticle_Implementation(FVector Start, FVector End, FHitResult HitResult)
+{
+	FString netmode = "";
+	if (GetNetMode() == NM_Client)
+		netmode = "CLIENT";
+	else if (GetNetMode() == NM_ListenServer)
+		netmode = "LISTEN";
+	else if (GetNetMode() == NM_DedicatedServer)
+		netmode = "SERVER";
+
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *netmode);
+	// Spawn rail
+	UParticleSystemComponent* Rail = UGameplayStatics::SpawnEmitterAtLocation(this, RailBeam, Start);
+	// If we hit something, draw rail from where we shot to where we hit
+	if (HitResult.bBlockingHit)
+	{
+		Rail->SetBeamSourcePoint(0, Start, 0);
+		Rail->SetBeamTargetPoint(0, HitResult.Location, 0);
+		//CheckIfHitEnemy(HitResult);
+	}
+	// Else draw to end of raytrace
+	else
+	{
+		Rail->SetBeamSourcePoint(0, Start, 0);
+		Rail->SetBeamTargetPoint(0, End, 0);
+	}
+}
+
+bool AFPSCharacter::CreateRailParticle_Validate(FVector Start, FVector End, FHitResult HitResult)
+{
+	return true;
+}
+
+void AFPSCharacter::CheckIfHitEnemy(FHitResult HitResult)
+{
+	/*if (Cast<AFPSCharacter>(HitResult.GetActor()))
+	{
+		if (Cast<ADefenderCharacter>(HitResult.GetActor()))
+		{
+			ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
+			float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+		}
+	}*/
 }

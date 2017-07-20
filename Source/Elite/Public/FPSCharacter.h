@@ -75,6 +75,9 @@ public:
 	UFUNCTION()
 	void JumpReleased();
 
+	UFUNCTION()
+	void OnFire();
+
 	/*UFUNCTION()
 	void OnFire();*/
 
@@ -112,5 +115,49 @@ public:
 
 	UFUNCTION(unreliable, server, WithValidation)
 	void ServerRequestJump();
+
+
+	/* Rail gun stuff */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = RailInfo)
+	int RailAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = RailInfo)
+	int MaxAmmo = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = RailInfo)
+	float RechargeTime = 0.00001f;
+
+	UFUNCTION()
+	void FireRail();
+
+	UFUNCTION()
+	void FireRocket();
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void ServerFireProjectile(FTransform ProjectileTransform);
+
+	UPROPERTY(EditAnywhere, Category = Setup)
+	TSubclassOf<ARocket> RocketBlueprint;
+
+	// Calls reload
+	UFUNCTION(BlueprintCallable, Category = RailInfo)
+	bool CanFire();
+
+	UFUNCTION()
+	void Reload();
+
+	UPROPERTY(EditDefaultsOnly, Category = RailInfo)
+	UParticleSystem* RailBeam;
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void CreateRailParticle(FVector Start, FVector End, FHitResult HitResult);
+
+	UFUNCTION(Server, Unreliable, WithValidation)
+	void ServerNotifyShot(FHitResult HitResult, FVector Start, FVector End);
+
+	/*UFUNCTION(Server, unreliable, WithValidation)
+	void ServerFireRail(FVector Start, FVector End);*/
+
+	void CheckIfHitEnemy(FHitResult HitResult);
 
 };

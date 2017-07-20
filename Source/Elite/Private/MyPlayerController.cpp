@@ -2,7 +2,6 @@
 
 #include "Elite.h"
 #include "../Public/MyPlayerController.h"
-#include "../Public/DefenderCharacter.h"
 #include "EliteGameMode.h"
 
 
@@ -10,31 +9,16 @@ void AMyPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Cast<AFPSCharacter>(GetPawn()))
+	auto ControlledPlayer = GetControlledPlayer();
+
+	if (!ControlledPlayer)
 	{
-		if (Cast<AAttackerCharacter>(GetPawn()))
-		{
-			Attacking = true;
-		}
-		else
-		{
-			Attacking = false;
-		}
+		UE_LOG(LogTemp, Error, TEXT("%s not possessing a player"), *GetName());
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("PlayerController not possessing a player"));
+		UE_LOG(LogTemp, Warning, TEXT("%s possessing: %s"), *GetName(), *ControlledPlayer->GetName());
 	}
-	//auto ControlledPlayer = GetControlledPlayer();
-
-	//if (!ControlledPlayer)
-	//{
-	//	UE_LOG(LogTemp, Error, TEXT("PlayerController not possessing a player"));
-	//}
-	//else
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("PlayerController possessing: %s"), *ControlledPlayer->GetName());
-	//}
 
 }
 
@@ -42,6 +26,12 @@ void AMyPlayerController::BeginPlay()
 void AMyPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AMyPlayerController::SetTeam(int Team)
+{
+	MyTeam = Team;
+	UE_LOG(LogTemp, Warning, TEXT("%s JOINED TEAM %d"), *GetName(), MyTeam)
 }
 
 AFPSCharacter* AMyPlayerController::GetControlledPlayer() const
@@ -115,64 +105,29 @@ bool AMyPlayerController::ServerRespawn_Validate()
 
 void AMyPlayerController::ServerRespawn_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("IN IT"));
-	FVector SpawnLocation = FVector(0, 0, 0);
-	AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
-	UE_LOG(LogTemp, Warning, TEXT("PRE CAST"));
-	/*AMyPlayerController* PC = Cast<AMyPlayerController>(Caller->GetController());*/
-	UE_LOG(LogTemp, Warning, TEXT("POST"));
-	//APawn* OldPawn = PC->GetPawn();
+	//UE_LOG(LogTemp, Warning, TEXT("IN IT"));
+	//FVector SpawnLocation = FVector(0, 0, 0);
+	//AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
+	//UE_LOG(LogTemp, Warning, TEXT("PRE CAST"));
+	///*AMyPlayerController* PC = Cast<AMyPlayerController>(Caller->GetController());*/
+	//UE_LOG(LogTemp, Warning, TEXT("POST"));
+	////APawn* OldPawn = PC->GetPawn();
 
-	if (!Attacking)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Respawning Defender"));
-		TSubclassOf<ADefenderCharacter> DefenderBP = GameMode->DefenderBlueprint;
-		ADefenderCharacter* NewCharacter = (ADefenderCharacter*)GetWorld()->SpawnActor(DefenderBP, &SpawnLocation, &FRotator::ZeroRotator);
-		UnPossess();
-		Possess(NewCharacter);
-		
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Respawning Attacker"));
-		TSubclassOf<AAttackerCharacter> AttackerBP = GameMode->AttackerBlueprint;
-		AAttackerCharacter* NewCharacter = (AAttackerCharacter*)GetWorld()->SpawnActor(AttackerBP, &SpawnLocation, &FRotator::ZeroRotator);
-		UnPossess();
-		Possess(NewCharacter);
-	}
+	//if (!Attacking)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Respawning Defender"));
+	//	TSubclassOf<ADefenderCharacter> DefenderBP = GameMode->DefenderBlueprint;
+	//	ADefenderCharacter* NewCharacter = (ADefenderCharacter*)GetWorld()->SpawnActor(DefenderBP, &SpawnLocation, &FRotator::ZeroRotator);
+	//	UnPossess();
+	//	Possess(NewCharacter);
+	//	
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Respawning Attacker"));
+	//	TSubclassOf<AAttackerCharacter> AttackerBP = GameMode->AttackerBlueprint;
+	//	AAttackerCharacter* NewCharacter = (AAttackerCharacter*)GetWorld()->SpawnActor(AttackerBP, &SpawnLocation, &FRotator::ZeroRotator);
+	//	UnPossess();
+	//	Possess(NewCharacter);
+	//}
 }
-
-void AMyPlayerController::ChangeTeam_Implementation(AFPSCharacter* Caller)
-{
-	UE_LOG(LogTemp, Warning, TEXT("%s"), Attacking ? *FString("Attacking") : *FString("Defending"));
-	FVector SpawnLocation = FVector(0, 0, 0);
-	AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
-	AMyPlayerController* PC = Cast<AMyPlayerController>(Caller->GetController());
-	APawn* OldPawn = PC->GetPawn();
-
-	if (!Attacking)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("DEFENDER SWITCHING"));
-		TSubclassOf<AAttackerCharacter> AttackerBP = GameMode->AttackerBlueprint;
-		AAttackerCharacter* NewCharacter = (AAttackerCharacter*)GetWorld()->SpawnActor(AttackerBP, &SpawnLocation, &FRotator::ZeroRotator);
-		PC->UnPossess();
-		PC->Possess(NewCharacter);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ATTACKER SWITCHING"));
-		TSubclassOf<ADefenderCharacter> DefenderBP = GameMode->DefenderBlueprint;
-		ADefenderCharacter* NewCharacter = (ADefenderCharacter*)GetWorld()->SpawnActor(DefenderBP, &SpawnLocation, &FRotator::ZeroRotator);
-		PC->UnPossess();
-		PC->Possess(NewCharacter);
-	}
-	Attacking = !Attacking;
-	OldPawn->Destroy();
-}
-
-bool AMyPlayerController::ChangeTeam_Validate(AFPSCharacter* Caller)
-{
-	return true;
-}
-
-

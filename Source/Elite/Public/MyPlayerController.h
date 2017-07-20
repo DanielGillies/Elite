@@ -2,7 +2,7 @@
 
 #pragma once
 
-//#include "FPSCharacter.h"
+#include "FPSCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "MyPlayerController.generated.h"
 /**
@@ -14,6 +14,9 @@ class ELITE_API AMyPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=PlayerTeam)
+	int MyTeam;
 
 	bool Attacking;
 
@@ -28,9 +31,6 @@ public:
 	bool GetSightRayHitLocation(FVector& HitLocation) const;
 
 	bool GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation) const;
-
-	UFUNCTION(reliable, server, WithValidation)
-	void ChangeTeam(AFPSCharacter* Caller);
 	
 	void Die(AFPSCharacter* Caller);
 
@@ -38,4 +38,6 @@ public:
 	void ServerRespawn();
 
 	void Respawn();
+
+	void SetTeam(int Team);
 };

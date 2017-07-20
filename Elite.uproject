@@ -3,14 +3,24 @@
 	"EngineAssociation": "4.14",
 	"Category": "",
 	"Description": "",
-	"Modules": [
+  "Modules": [
+    {
+      "Name": "Elite",
+      "Type": "Runtime",
+      "LoadingPhase": "Default",
+      "AdditionalDependencies": [
+        "Engine"
+      ]
+    }
+  ],
+  "Plugins": [
 		{
-			"Name": "Elite",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine"
-			]
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineFramework",
+			"Enabled": true
 		}
 	]
 }

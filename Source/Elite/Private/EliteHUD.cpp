@@ -16,7 +16,7 @@ AEliteHUD::AEliteHUD(const FObjectInitializer& ObjectInitializer) : Super(Object
 
 void AEliteHUD::DrawHUD()
 {
-	UE_LOG(LogTemp, Warning, TEXT("DrawHUD called"));
+	//UE_LOG(LogTemp, Warning, TEXT("DrawHUD called"));
 	// Get Screen Directions
 	FVector2D ScreenDimensions = FVector2D(Canvas->SizeX, Canvas->SizeY);
 

@@ -30,8 +30,8 @@ void AEliteGameMode::PostLogin(APlayerController* NewPlayer)
 bool AEliteGameMode::ReadyToStartMatch_Implementation() {
 	//Super::ReadyToStartMatch();
 	//return true;
-
-	if (PlayerArray.Num() >= 2)
+	AEliteGameState* GS = Cast<AEliteGameState>(GameState);
+	if (GS->Team1.Num() > 0 && GS->Team2.Num() > 0)
 	{
 
 		for (APlayerController* Controller : PlayerArray)

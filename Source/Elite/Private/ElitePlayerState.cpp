@@ -62,6 +62,6 @@ void AElitePlayerState::ToggleReady_Implementation(AElitePlayerState* PS)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("LOL FUCK YOU"));
+		UE_LOG(LogTemp, Error, TEXT("PS is null in ToggleReady in PlayerState"));
 	}
 }

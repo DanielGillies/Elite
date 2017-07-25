@@ -86,7 +86,7 @@ void AFPSCharacter::OnFire()
 		UE_LOG(LogTemp, Warning, TEXT("FIRING RAIL"));
 		FireRail();
 	}
-	else
+	else if (Team == 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FIRING ROCKET"));
 		FireRocket();

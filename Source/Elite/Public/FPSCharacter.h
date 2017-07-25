@@ -26,6 +26,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Movement)
 	float JumpForce = 350.f;
 
+	UPROPERTY(EditAnywhere, Category = Movement)
+	float WallJumpUpForce = .7f;
+
 protected:
 	UPROPERTY(EditAnywhere, Category = Attributes)
 	int Health = 3;
@@ -83,6 +86,12 @@ public:
 
 	UFUNCTION()
 	void OnFire();
+
+	UFUNCTION()
+	void OnReady();
+
+	UFUNCTION(unreliable, Server, WithValidation)
+	void ServerReady(AElitePlayerState* PS);
 
 	/*UFUNCTION()
 	void OnFire();*/

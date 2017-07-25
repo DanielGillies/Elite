@@ -11,6 +11,7 @@ void AElitePlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > &
 
 	// Replicate to everyone
 	DOREPLIFETIME(AElitePlayerState, MyTeam);
+	DOREPLIFETIME(AElitePlayerState, bIsReady);
 }
 
 void AElitePlayerState::BeginPlay()

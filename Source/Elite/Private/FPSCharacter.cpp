@@ -59,14 +59,31 @@ void AFPSCharacter::SetupPlayerInputComponent(class UInputComponent* InputCompon
 
 	InputComponent->BindAction("Fire", IE_Pressed, this, &AFPSCharacter::OnFire);
 
+	InputComponent->BindAction("Ready", IE_Pressed, this, &AFPSCharacter::OnReady);
+
 	//InputComponent->BindAction("Jump", IE_Pressed, this, &AFPSCharacter::OnStartJump);
 	//InputComponent->BindAction("Jump", IE_Released, this, &AFPSCharacter::OnStopJump);
+}
+
+void AFPSCharacter::OnReady()
+{
+	AElitePlayerState* PS = Cast<AElitePlayerState>(GetController()->PlayerState);
+	ServerReady(PS);
+}
+
+bool AFPSCharacter::ServerReady_Validate(AElitePlayerState* PS)
+{
+	return true;
+}
+
+void AFPSCharacter::ServerReady_Implementation(AElitePlayerState* PS)
+{
+	PS->bIsReady = !PS->bIsReady;
 }
 
 void AFPSCharacter::OnFire()
 {
 	AElitePlayerState* PS = Cast<AElitePlayerState>(GetController()->PlayerState);
-
 
 	int Team = PS->MyTeam;
 
@@ -174,7 +191,7 @@ bool AFPSCharacter::ServerRequestWalljump_Validate(FVector WallImpact)
 
 void AFPSCharacter::ServerRequestWalljump_Implementation(FVector WallImpact)
 {
-	GetCharacterMovement()->AddImpulse((WallImpact + (GetActorUpVector() * FVector(.7f))) * WallJumpForce, true);
+	GetCharacterMovement()->AddImpulse((WallImpact + (GetActorUpVector() * FVector(WallJumpUpForce))) * WallJumpForce, true);
 }
 
 bool AFPSCharacter::ServerRequestJump_Validate()

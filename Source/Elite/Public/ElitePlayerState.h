@@ -22,6 +22,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Points")
 	int Rockets = 0;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Ready", Replicated)
+	bool bIsReady = false;
+
 	UFUNCTION(BlueprintCallable, Category = "Team", Server, Reliable, WithValidation)
 	void SetTeam(int32 Team, APlayerState* PlayerState);
 

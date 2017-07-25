@@ -68,17 +68,7 @@ void AFPSCharacter::SetupPlayerInputComponent(class UInputComponent* InputCompon
 void AFPSCharacter::OnReady()
 {
 	AElitePlayerState* PS = Cast<AElitePlayerState>(GetController()->PlayerState);
-	ServerReady(PS);
-}
-
-bool AFPSCharacter::ServerReady_Validate(AElitePlayerState* PS)
-{
-	return true;
-}
-
-void AFPSCharacter::ServerReady_Implementation(AElitePlayerState* PS)
-{
-	PS->bIsReady = !PS->bIsReady;
+	PS->ToggleReady(PS);
 }
 
 void AFPSCharacter::OnFire()

@@ -25,3 +25,25 @@ void AEliteGameMode::PostLogin(APlayerController* NewPlayer)
 
 	UE_LOG(LogTemp, Warning, TEXT("Num of players is now %d"), PlayerArray.Num());
 }
+
+/* CPP file of our GameMode Child Class */
+bool AEliteGameMode::ReadyToStartMatch_Implementation() {
+	//Super::ReadyToStartMatch();
+	//return true;
+
+	if (PlayerArray.Num() >= 2)
+	{
+
+		for (APlayerController* Controller : PlayerArray)
+		{
+			AElitePlayerState* PS = Cast<AElitePlayerState>(Controller->PlayerState);
+			if (!PS->bIsReady)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+	return false;
+}

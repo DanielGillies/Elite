@@ -90,9 +90,6 @@ public:
 	UFUNCTION()
 	void OnReady();
 
-	UFUNCTION(unreliable, Server, WithValidation)
-	void ServerReady(AElitePlayerState* PS);
-
 	/*UFUNCTION()
 	void OnFire();*/
 

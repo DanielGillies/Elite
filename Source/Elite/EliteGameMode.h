@@ -19,4 +19,5 @@ public:
 
 	TArray<APlayerController*> PlayerArray;
 
+	virtual bool ReadyToStartMatch_Implementation() override;
 };

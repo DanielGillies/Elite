@@ -37,4 +37,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Team", Replicated)
 	int32 MyTeam;
+
+	UFUNCTION(BlueprintCallable, Category = "Ready", Server, Unreliable, WithValidation)
+	void ToggleReady(AElitePlayerState* PS);
 };

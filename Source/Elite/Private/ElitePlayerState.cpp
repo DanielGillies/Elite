@@ -16,16 +16,9 @@ void AElitePlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > &
 
 void AElitePlayerState::BeginPlay()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("PLAYERSTATE"));
 
 }
 
-//void AElitePlayerState::SetTeam(int32 Team)
-//{
-//	MyTeam = Team;
-//	//AEliteGameState* GS = Cast<AEliteGameState>(GetWorld()->GetGameState())
-//	//GetWorld()->GetGameState()->
-//}
 
 bool AElitePlayerState::SetTeam_Validate(int32 Team, APlayerState* PlayerState)
 {
@@ -56,3 +49,19 @@ int32 AElitePlayerState::GetTeam()
 	return MyTeam;
 }
 
+bool AElitePlayerState::ToggleReady_Validate(AElitePlayerState* PS)
+{
+	return true;
+}
+
+void AElitePlayerState::ToggleReady_Implementation(AElitePlayerState* PS)
+{
+	if (PS)
+	{
+		PS->bIsReady = !PS->bIsReady;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("LOL FUCK YOU"));
+	}
+}

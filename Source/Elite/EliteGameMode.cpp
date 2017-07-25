@@ -20,5 +20,8 @@ void AEliteGameMode::PostLogin(APlayerController* NewPlayer)
 
 	PlayerArray.Add(NewPlayer);
 
+	//AEliteGameState* GS = Cast<AEliteGameState>(GetWorld()->GetGameState());
+	//GS->Team1.Add(NewPlayer);
+
 	UE_LOG(LogTemp, Warning, TEXT("Num of players is now %d"), PlayerArray.Num());
 }

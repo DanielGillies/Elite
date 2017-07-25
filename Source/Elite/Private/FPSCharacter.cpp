@@ -5,6 +5,7 @@
 #include "../Public/FPSCharacter.h"
 #include "../Public/Rocket.h"
 #include "../Public/ElitePlayerState.h"
+#include "../Public/EliteGameState.h"
 
 // Sets default values
 AFPSCharacter::AFPSCharacter()
@@ -305,18 +306,28 @@ void AFPSCharacter::FireRocket()
 
 		FTransform ProjectileTransform = FTransform(Rotation, Location);
 
-		ServerFireProjectile(ProjectileTransform);
+		ServerFireProjectile(ProjectileTransform, GetController());
 
 	}
 }
 
-bool AFPSCharacter::ServerFireProjectile_Validate(FTransform ProjectileTransform)
+bool AFPSCharacter::ServerFireProjectile_Validate(FTransform ProjectileTransform, AController* Shooter)
 {
 	return true;
 }
 
-void AFPSCharacter::ServerFireProjectile_Implementation(FTransform ProjectileTransform)
+void AFPSCharacter::ServerFireProjectile_Implementation(FTransform ProjectileTransform, AController* Shooter)
 {
+
+	FString netmode = "";
+	if (GetNetMode() == NM_Client)
+		netmode = "CLIENT";
+	else if (GetNetMode() == NM_ListenServer)
+		netmode = "LISTEN";
+	else if (GetNetMode() == NM_DedicatedServer)
+		netmode = "SERVER";
+
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *netmode);
 
 	// Set up SpawnParams for rocket
 	FActorSpawnParameters SpawnParams;
@@ -329,6 +340,7 @@ void AFPSCharacter::ServerFireProjectile_Implementation(FTransform ProjectileTra
 	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
 	if (Rocket)
 	{
+		Rocket->Shooter = Shooter;
 		Rocket->LaunchProjectile(ShootDirection);
 		Rocket->SetReplicates(true);
 		Rocket->bAlwaysRelevant = true;
@@ -434,7 +446,7 @@ void AFPSCharacter::CreateRailParticle_Implementation(FVector Start, FVector End
 	{
 		Rail->SetBeamSourcePoint(0, Start, 0);
 		Rail->SetBeamTargetPoint(0, HitResult.Location, 0);
-		//CheckIfHitEnemy(HitResult);
+		CheckIfHitEnemy(HitResult);
 	}
 	// Else draw to end of raytrace
 	else
@@ -451,12 +463,28 @@ bool AFPSCharacter::CreateRailParticle_Validate(FVector Start, FVector End, FHit
 
 void AFPSCharacter::CheckIfHitEnemy(FHitResult HitResult)
 {
-	/*if (Cast<AFPSCharacter>(HitResult.GetActor()))
+	AFPSCharacter* HitCharacter = Cast<AFPSCharacter>(HitResult.GetActor());
+	if (HitCharacter)
 	{
-		if (Cast<ADefenderCharacter>(HitResult.GetActor()))
+		//float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+		AMyPlayerController* HitController = Cast<AMyPlayerController>(HitCharacter->GetController());
+		if (HitController)
 		{
-			ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
-			float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+			AElitePlayerState* HitPlayerState = Cast<AElitePlayerState>(HitController->PlayerState);
+			if (HitPlayerState)
+			{
+				AEliteGameState* GS = Cast<AEliteGameState>(GetWorld()->GetGameState());
+				if (GS)
+				{
+					if (HitPlayerState->MyTeam != GS->AttackingTeam)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("HIT TEAM = %d || Attacking Team = %d"), HitPlayerState->MyTeam, GS->AttackingTeam);
+						//ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
+						float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+					}
+				}
+				
+			}
 		}
-	}*/
+	}
 }

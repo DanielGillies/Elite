@@ -32,6 +32,8 @@ public:
 	/** trigger explosion */
 	void Explode(const FHitResult& Impact);
 
+	AController* Shooter;
+
 private:
 	/** movement component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)

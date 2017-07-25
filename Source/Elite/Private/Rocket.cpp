@@ -3,6 +3,7 @@
 #include "Elite.h"
 #include "../Public/Rocket.h"
 #include "../Public/ElitePlayerState.h"
+#include "../Public/MyPlayerController.h"
 
 
 // Sets default values
@@ -42,12 +43,10 @@ ARocket::ARocket()
 	bReplicates = true;
 	bReplicateMovement = true;
 
-
 	MovementComp->OnProjectileStop.AddDynamic(this, &ARocket::OnImpact);
 	CollisionComp->MoveIgnoreActors.Add(Instigator);
-	
 
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *CollisionComp->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *Instigator->GetName());
 
 }
 
@@ -70,6 +69,7 @@ void ARocket::Tick( float DeltaTime )
 
 void ARocket::LaunchProjectile(FVector ShootDirection)
 {
+	/*UE_LOG(LogTemp, Warning, TEXT("Shooter = %s"), *Shooter->GetName());*/
 	MovementComp->Velocity = ShootDirection * MovementComp->InitialSpeed;
 	//UE_LOG(LogTemp, Warning, TEXT("%s"), *ShootDirection.ToString());
 	//MovementComp->SetVelocityInLocalSpace(FVector::ForwardVector * LaunchSpeed);
@@ -95,6 +95,32 @@ void ARocket::OnImpact(const FHitResult& HitResult)
 
 void ARocket::Explode(const FHitResult& Impact)
 {
+	AMyPlayerController* CurrShooter = Cast<AMyPlayerController>(Shooter);
+	AElitePlayerState* ShooterPS = Cast<AElitePlayerState>(CurrShooter->PlayerState);
+	
+	AFPSCharacter* Victim = Cast<AFPSCharacter>(Impact.GetActor());
+	if (Victim)
+	{
+		AMyPlayerController* VictimController = Cast<AMyPlayerController>(Victim->GetController());
+		if (VictimController)
+		{
+			AElitePlayerState* VictimPS = Cast<AElitePlayerState>(VictimController->PlayerState);
+			if (VictimPS)
+			{
+				
+				UE_LOG(LogTemp, Warning, TEXT("SHOOTER TEAM = %d || VICTIM TEAM = %d"), ShooterPS->MyTeam, VictimPS->MyTeam);
+				if (VictimPS->MyTeam != ShooterPS->MyTeam)
+				{
+					float DamageTaken = Victim->TakeDamage(1.f, FDamageEvent(), Shooter, this);
+					if (ShooterPS)
+					{
+						ShooterPS->Rockets += 1;
+						UE_LOG(LogTemp, Warning, TEXT("%s hit a rocket on %s -- Has %d rocket hits"), *Shooter->GetName(), *Victim->GetName(), ShooterPS->Rockets);
+					}
+				}
+			}
+		}
+	}
 	//// Only Check what we hit if it is a player
 	//if (Cast<AFPSCharacter>(Impact.GetActor()))
 	//{
@@ -146,6 +172,6 @@ void ARocket::Explode(const FHitResult& Impact)
 
 	//	bExploded = true;*/
 	//}
-	//this->Destroy();
+	this->Destroy();
 
 }

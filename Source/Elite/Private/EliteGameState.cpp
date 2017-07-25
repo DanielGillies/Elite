@@ -2,8 +2,16 @@
 
 #include "Elite.h"
 #include "EliteGameState.h"
-#include "MyPlayerController.h"
-#include "ElitePlayerState.h"
+#include "UnrealNetwork.h"
+
+void AEliteGameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Replicate to everyone
+	DOREPLIFETIME(AEliteGameState, Team1);
+	DOREPLIFETIME(AEliteGameState, Team2);
+}
 
 void AEliteGameState::BeginPlay()
 {
@@ -22,16 +30,24 @@ void AEliteGameState::Tick(float DeltaTime)
 	}*/
 }
 
-void AEliteGameState::AddToTeam(int32 Team, AMyPlayerController* PC)
+bool AEliteGameState::AddToTeam_Validate(int32 Team, AElitePlayerState* PlayerState)
 {
-	//if (Team == 1)
-	//{
-	//	Team1.Add(PC);
-	//}
-	//else
-	//{
-	//	Team2.Add(PC);
-	//}
+	return true;
+}
+
+void AEliteGameState::AddToTeam_Implementation(int32 Team, AElitePlayerState* PlayerState)
+{
+	//AElitePlayerState* Player = Cast<AElitePlayerState>(PlayerState);
+	if (Team == 1)
+	{
+		Team1.Add(PlayerState);
+		UE_LOG(LogTemp, Warning, TEXT("TEAM 1 now has %d players"), Team1.Num());
+	}
+	else
+	{
+		Team2.Add(PlayerState);
+		UE_LOG(LogTemp, Warning, TEXT("TEAM 2 now has %d players"), Team2.Num());
+	}
 }
 
 void AEliteGameState::PrintTeams()

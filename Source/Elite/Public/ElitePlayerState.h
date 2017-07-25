@@ -22,13 +22,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Points")
 	int Rockets = 0;
 
-	//AMyPlayerController MyController;
+	UFUNCTION(BlueprintCallable, Category = "Team", Server, Reliable, WithValidation)
+	void SetTeam(int32 Team, APlayerState* PlayerState);
 
 	UFUNCTION(BlueprintCallable, Category = "Team")
-	void SetTeam(int32 Team);
+	int32 GetTeam();
 	
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
 	void BeginPlay();
 
-	UPROPERTY(BlueprintReadWrite, Category = "Team")
+	UPROPERTY(BlueprintReadWrite, Category = "Team", Replicated)
 	int32 MyTeam;
 };

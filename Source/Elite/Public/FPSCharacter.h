@@ -37,6 +37,12 @@ protected:
 
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+	UMaterial* RedMat;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
+	UMaterial* BlueMat;
+
 	//UPROPERTY(EditAnywhere, Category = Players)
 	//TSubclassOf<ADefenderCharacter> DefenderBlueprint;
 
@@ -133,8 +139,8 @@ public:
 	UFUNCTION()
 	void FireRocket();
 
-	UFUNCTION(NetMulticast, Reliable, WithValidation)
-	void ServerFireProjectile(FTransform ProjectileTransform);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFireProjectile(FTransform ProjectileTransform, AController* Shooter);
 
 	UPROPERTY(EditAnywhere, Category = Setup)
 	TSubclassOf<ARocket> RocketBlueprint;

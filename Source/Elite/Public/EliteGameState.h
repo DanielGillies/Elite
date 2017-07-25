@@ -5,7 +5,9 @@
 #include "GameFramework/GameState.h"
 #include "EliteGameState.generated.h"
 
-class AMyPlayerController;
+// Forward Declarations
+//class AMyPlayerController;
+class AElitePlayerState;
 
 /**
  * 
@@ -20,11 +22,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
 
-	void AddToTeam(int32 Team, AMyPlayerController* PC);
+	UFUNCTION(BlueprintCallable, Category = "Team", Server, Reliable, WithValidation)
+	void AddToTeam(int32 Team, AElitePlayerState* PlayerState);
 	
 	void PrintTeams();
 
-	TArray<AMyPlayerController*> Team1;
+	UPROPERTY(BlueprintReadWrite, Category = "GameState Team", Replicated)
+	TArray<AElitePlayerState*> Team1;
 
-	TArray<AMyPlayerController*> Team2;
+	UPROPERTY(BlueprintReadWrite, Category = "GameState Team", Replicated)
+	TArray<AElitePlayerState*> Team2;
+
+	int AttackingTeam = 1;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 };

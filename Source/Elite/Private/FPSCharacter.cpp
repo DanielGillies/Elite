@@ -397,45 +397,29 @@ void AFPSCharacter::FireRail()
 			UE_LOG(LogTemp, Warning, TEXT("%s"), *HitResult.GetActor()->GetName());
 		}
 
-		ServerNotifyShot(HitResult, Start, End);
+		ServerNotifyShot(HitResult, Start, End, GetController()->PlayerState);
 
 	}
 }
 
-bool AFPSCharacter::ServerNotifyShot_Validate(FHitResult HitResult, FVector Start, FVector End)
+bool AFPSCharacter::ServerNotifyShot_Validate(FHitResult HitResult, FVector Start, FVector End, APlayerState* Shooter)
 {
 	return true;
 }
 
-void AFPSCharacter::ServerNotifyShot_Implementation(FHitResult HitResult, FVector Start, FVector End)
+void AFPSCharacter::ServerNotifyShot_Implementation(FHitResult HitResult, FVector Start, FVector End, APlayerState* Shooter)
 {
 	// Check if we hit an enemy
-	CreateRailParticle(Start, End, HitResult);
+	CreateRailParticle(Start, End, HitResult, Shooter);
 }
 
-bool AFPSCharacter::CanFire()
-{
-	/*if (RailAmmo > 0)
-	{
-		RailAmmo -= 1;
 
-		FTimerHandle UnusedHandle;
-		GetWorldTimerManager().SetTimer(UnusedHandle, this, &AFPSCharacter::Reload, RechargeTime, false);
-		return true;
-	}
-	else
-	{
-		return false;
-	}*/
+bool AFPSCharacter::CreateRailParticle_Validate(FVector Start, FVector End, FHitResult HitResult, APlayerState* Shooter)
+{
 	return true;
 }
 
-void AFPSCharacter::Reload()
-{
-	RailAmmo = MaxAmmo;
-}
-
-void AFPSCharacter::CreateRailParticle_Implementation(FVector Start, FVector End, FHitResult HitResult)
+void AFPSCharacter::CreateRailParticle_Implementation(FVector Start, FVector End, FHitResult HitResult, APlayerState* Shooter)
 {
 	FString netmode = "";
 	if (GetNetMode() == NM_Client)
@@ -453,7 +437,7 @@ void AFPSCharacter::CreateRailParticle_Implementation(FVector Start, FVector End
 	{
 		Rail->SetBeamSourcePoint(0, Start, 0);
 		Rail->SetBeamTargetPoint(0, HitResult.Location, 0);
-		CheckIfHitEnemy(HitResult);
+		CheckIfHitEnemy(HitResult, Shooter);
 	}
 	// Else draw to end of raytrace
 	else
@@ -463,13 +447,16 @@ void AFPSCharacter::CreateRailParticle_Implementation(FVector Start, FVector End
 	}
 }
 
-bool AFPSCharacter::CreateRailParticle_Validate(FVector Start, FVector End, FHitResult HitResult)
+void AFPSCharacter::CheckIfHitEnemy(FHitResult HitResult, APlayerState* Shooter)
 {
-	return true;
-}
 
-void AFPSCharacter::CheckIfHitEnemy(FHitResult HitResult)
-{
+	AElitePlayerState* ShooterPS = Cast<AElitePlayerState>(Shooter);
+	if (!ShooterPS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NO ShooterPS"));
+		return;
+	}
+
 	AFPSCharacter* HitCharacter = Cast<AFPSCharacter>(HitResult.GetActor());
 	if (HitCharacter)
 	{
@@ -483,7 +470,7 @@ void AFPSCharacter::CheckIfHitEnemy(FHitResult HitResult)
 				AEliteGameState* GS = Cast<AEliteGameState>(GetWorld()->GetGameState());
 				if (GS)
 				{
-					if (HitPlayerState->MyTeam != GS->AttackingTeam)
+					if (HitPlayerState->MyTeam != ShooterPS->MyTeam)
 					{
 						UE_LOG(LogTemp, Warning, TEXT("HIT TEAM = %d || Attacking Team = %d"), HitPlayerState->MyTeam, GS->AttackingTeam);
 						//ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
@@ -494,4 +481,27 @@ void AFPSCharacter::CheckIfHitEnemy(FHitResult HitResult)
 			}
 		}
 	}
+}
+
+
+bool AFPSCharacter::CanFire()
+{
+	/*if (RailAmmo > 0)
+	{
+	RailAmmo -= 1;
+
+	FTimerHandle UnusedHandle;
+	GetWorldTimerManager().SetTimer(UnusedHandle, this, &AFPSCharacter::Reload, RechargeTime, false);
+	return true;
+	}
+	else
+	{
+	return false;
+	}*/
+	return true;
+}
+
+void AFPSCharacter::Reload()
+{
+	RailAmmo = MaxAmmo;
 }

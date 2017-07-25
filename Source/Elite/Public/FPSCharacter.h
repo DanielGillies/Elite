@@ -162,14 +162,14 @@ public:
 	UParticleSystem* RailBeam;
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
-	void CreateRailParticle(FVector Start, FVector End, FHitResult HitResult);
+	void CreateRailParticle(FVector Start, FVector End, FHitResult HitResult, APlayerState* Shooter);
 
 	UFUNCTION(Server, Unreliable, WithValidation)
-	void ServerNotifyShot(FHitResult HitResult, FVector Start, FVector End);
+	void ServerNotifyShot(FHitResult HitResult, FVector Start, FVector End, APlayerState* Shooter);
 
 	/*UFUNCTION(Server, unreliable, WithValidation)
 	void ServerFireRail(FVector Start, FVector End);*/
 
-	void CheckIfHitEnemy(FHitResult HitResult);
+	void CheckIfHitEnemy(FHitResult HitResult, APlayerState* Shooter);
 
 };

@@ -7,6 +7,7 @@
 #include "FPSCharacter.generated.h"
 
 class ADefenderCharacter;
+class AWeapon;
 
 UCLASS()
 class ELITE_API AFPSCharacter : public ACharacter
@@ -38,8 +39,24 @@ protected:
 
 	void Die(class AMyPlayerController* PC);
 
+	/** currently equipped weapon */
+	UPROPERTY(Transient, Replicated)
+	class AWeapon* CurrentWeapon;
+
+	/** currently equipped weapon */
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	TSubclassOf<AWeapon> DefaultWeapon;
+
 public:
 
+	/** WEAPONS **/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapons)
+	TSubclassOf<AWeapon> RailGunBP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapons)
+	TSubclassOf<AWeapon> RocketWeaponBP;
+
+	/** MESHES **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
 	UMaterial* RedMat;
 
@@ -51,6 +68,8 @@ public:
 
 	// Sets default values for this character's properties
 	AFPSCharacter();
+
+	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -159,7 +178,7 @@ public:
 	void Reload();
 
 	UPROPERTY(EditDefaultsOnly, Category = RailInfo)
-	UParticleSystem* RailBeam;
+		UParticleSystem* RailBeam;
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
 	void CreateRailParticle(FVector Start, FVector End, FHitResult HitResult, APlayerState* Shooter);
@@ -171,5 +190,10 @@ public:
 	void ServerFireRail(FVector Start, FVector End);*/
 
 	void CheckIfHitEnemy(FHitResult HitResult, APlayerState* Shooter);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void SpawnWeapon();
+
+	void EquipWeapon(AWeapon* WeaponToEquip);
 
 };

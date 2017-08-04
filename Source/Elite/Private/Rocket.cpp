@@ -86,11 +86,11 @@ void ARocket::PostNetReceiveVelocity(const FVector& NewVelocity)
 
 void ARocket::OnImpact(const FHitResult& HitResult)
 {
-	if (Role == ROLE_Authority)
-	{
-		Explode(HitResult);
-		//DisableAndDestroy();
-	}
+	//if (Role == ROLE_Authority)
+	//{
+	//	Explode(HitResult);
+	//	//DisableAndDestroy();
+	//}
 }
 
 void ARocket::Explode(const FHitResult& Impact)

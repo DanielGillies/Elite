@@ -6,6 +6,8 @@
 #include "../Public/Rocket.h"
 #include "../Public/ElitePlayerState.h"
 #include "../Public/EliteGameState.h"
+#include "../Public/Weapon.h"
+#include "UnrealNetwork.h"
 
 // Sets default values
 AFPSCharacter::AFPSCharacter()
@@ -15,6 +17,14 @@ AFPSCharacter::AFPSCharacter()
 
 
 	SetupMovementComponent();
+}
+
+void AFPSCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Replicate to everyone
+	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
 }
 
 void AFPSCharacter::SetupMovementComponent()
@@ -31,6 +41,56 @@ void AFPSCharacter::SetupMovementComponent()
 void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SpawnWeapon();
+
+	//AWeapon *Spawner = SpawnWeapon();
+
+	//FName fnWeaponSocket = TEXT("weapon_socket");
+
+	//CurrentWeapon = DefaultWeapon->GetDefaultObject<AWeapon>();
+
+	//CurrentWeapon->AttachToActor(this, FAttachmentTransformRules::SnapToTargetIncludingScale, "weapon_socket");
+	//CurrentWeapon->AttachRootComponentTo(GetMesh(), fnWeaponSocket, EAttachLocation::SnapToTarget);
+
+	//Spawner->WeaponMesh->SetOwnerNoSee(true);
+
+	//CurrentWeapon->SetOwner(this);
+	//CurrentWeapon->SetOwner(this);
+
+	//CurrentWeapon = Spawner;
+
+}
+
+bool AFPSCharacter::SpawnWeapon_Validate()
+{
+	return true;
+}
+
+void AFPSCharacter::SpawnWeapon_Implementation()
+{
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = Instigator;
+	AWeapon *Spawner = GetWorld()->SpawnActor<AWeapon>(DefaultWeapon, SpawnParams);
+	EquipWeapon(Spawner);
+	/*FName fnWeaponSocket = TEXT("weapon_socket");
+
+	Spawner->AttachRootComponentTo(GetMesh(), fnWeaponSocket, EAttachLocation::SnapToTarget);
+
+	CurrentWeapon = Spawner;*/
+}
+
+//bool AFPSCharacter::EquipWeapon_Validate(AWeapon* WeaponToEquip)
+//{
+//	return true;
+//}
+
+void AFPSCharacter::EquipWeapon(AWeapon* WeaponToEquip)
+{
+	FName fnWeaponSocket = TEXT("weapon_socket");
+	CurrentWeapon = WeaponToEquip;
+	CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, fnWeaponSocket);
 }
 
 // Called every frame
@@ -73,24 +133,37 @@ void AFPSCharacter::OnReady()
 
 void AFPSCharacter::OnFire()
 {
-	AElitePlayerState* PS = Cast<AElitePlayerState>(GetController()->PlayerState);
+	//UE_LOG(LogTemp, Warning, TEXT("%s"), *DefaultWeapon->GetName());
 
-	int Team = PS->MyTeam;
+	// Set up Player Controller to access functions
+	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
 
-	UE_LOG(LogTemp, Warning, TEXT("TEAM: %d"), PS->MyTeam);
+	FVector Start = (PC->PlayerCameraManager->GetCameraLocation() + (PC->GetActorForwardVector() * 50)) - FVector(0, 0, 10);
+	FVector End = Start + PC->GetActorForwardVector() * 5000;
 
-	//UE_LOG(LogTemp, Warning, TEXT("TEAM: %s"), *PS->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("IN CHAR: START = %s || END = %s"), *Start.ToString(), *End.ToString());
 
-	if (Team == 1)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FIRING RAIL"));
-		FireRail();
-	}
-	else if (Team == 2)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FIRING ROCKET"));
-		FireRocket();
-	}
+	CurrentWeapon->Fire();
+	/*DefaultWeapon->FireWeapon();*/
+	//DefaultWeapon->FireWeapon();
+	//AElitePlayerState* PS = Cast<AElitePlayerState>(GetController()->PlayerState);
+
+	//int Team = PS->MyTeam;
+
+	//UE_LOG(LogTemp, Warning, TEXT("TEAM: %d"), PS->MyTeam);
+
+	////UE_LOG(LogTemp, Warning, TEXT("TEAM: %s"), *PS->GetName());
+
+	//if (Team == 1)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("FIRING RAIL"));
+	//	FireRail();
+	//}
+	//else if (Team == 2)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("FIRING ROCKET"));
+	//	FireRocket();
+	//}
 }
 
 // Move Forward
@@ -288,34 +361,34 @@ void AFPSCharacter::Die(AMyPlayerController* PC)
 /*Rocket Stuff*/
 void AFPSCharacter::FireRocket()
 {
-	if (CanFire())
-	{
-		// Set up Player Controller to access functions
-		AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
+	//if (CanFire())
+	//{
+	//	// Set up Player Controller to access functions
+	//	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
 
-		// Getting Rotation from character to 3D world space of xhair
-		FVector HitLocation;
-		FVector Location;
-		FRotator Rotation;
-		if (PC->GetSightRayHitLocation(HitLocation))
-		{
-			// Setting up the rotation and location of the spawn point for the rocket
-			Location = GetActorLocation() + (GetActorForwardVector() * 100);
-			Rotation = (HitLocation - (Location)).Rotation();
-		}
-		else
-		{
-			// Setting up the rotation and location of the spawn point for the rocket
-			Location = GetActorLocation() + (GetActorForwardVector() * 100);
-			Rotation = GetControlRotation();
-			Rotation.Pitch += 1.f;
-		}
+	//	// Getting Rotation from character to 3D world space of xhair
+	//	FVector HitLocation;
+	//	FVector Location;
+	//	FRotator Rotation;
+	//	if (PC->GetSightRayHitLocation(HitLocation))
+	//	{
+	//		// Setting up the rotation and location of the spawn point for the rocket
+	//		Location = GetActorLocation() + (GetActorForwardVector() * 100);
+	//		Rotation = (HitLocation - (Location)).Rotation();
+	//	}
+	//	else
+	//	{
+	//		// Setting up the rotation and location of the spawn point for the rocket
+	//		Location = GetActorLocation() + (GetActorForwardVector() * 100);
+	//		Rotation = GetControlRotation();
+	//		Rotation.Pitch += 1.f;
+	//	}
 
-		FTransform ProjectileTransform = FTransform(Rotation, Location);
+	//	FTransform ProjectileTransform = FTransform(Rotation, Location);
 
-		ServerFireProjectile(ProjectileTransform, GetController());
+	//	ServerFireProjectile(ProjectileTransform, GetController());
 
-	}
+	//}
 }
 
 bool AFPSCharacter::ServerFireProjectile_Validate(FTransform ProjectileTransform, AController* Shooter)

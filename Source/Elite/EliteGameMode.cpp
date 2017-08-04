@@ -30,6 +30,10 @@ void AEliteGameMode::PostLogin(APlayerController* NewPlayer)
 bool AEliteGameMode::ReadyToStartMatch_Implementation() {
 	//Super::ReadyToStartMatch();
 	//return true;
+	if (bDebugMode)
+	{
+		return true;
+	}
 	AEliteGameState* GS = Cast<AEliteGameState>(GameState);
 	if (GS->Team1.Num() > 0 && GS->Team2.Num() > 0)
 	{
@@ -46,4 +50,5 @@ bool AEliteGameMode::ReadyToStartMatch_Implementation() {
 		return true;
 	}
 	return false;
-}
+}
+

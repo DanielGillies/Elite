@@ -20,4 +20,7 @@ public:
 	TArray<APlayerController*> PlayerArray;
 
 	virtual bool ReadyToStartMatch_Implementation() override;
+
+	UPROPERTY(EditAnywhere, Category = Debug)
+	bool bDebugMode = false;
 };

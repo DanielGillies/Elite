@@ -28,9 +28,9 @@ public:
 
 	bool GetLookDirection(FVector2D ScreenLocation, FVector& LookDirection) const;
 
-	bool GetSightRayHitLocation(FVector& HitLocation) const;
+	bool GetSightRayHitLocation(FVector& HitLocation, float WeaponRange) const;
 
-	bool GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation) const;
+	bool GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation, float WeaponRange) const;
 	
 	void Die(AFPSCharacter* Caller);
 
@@ -40,4 +40,11 @@ public:
 	void Respawn();
 
 	void SetTeam(int Team);
+
+private:
+	UPROPERTY(EditAnywhere)
+	float CrosshairXLocation = 0.5f;
+
+	UPROPERTY(EditAnywhere)
+	float CrosshairYLocation = 0.5f;
 };

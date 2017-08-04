@@ -34,14 +34,16 @@ public:
 
 	AController* Shooter;
 
+	/** collisions */
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	USphereComponent* CollisionComp;
+
 private:
 	/** movement component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	UProjectileMovementComponent* MovementComp;
 
-	/** collisions */
-	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-	USphereComponent* CollisionComp;
+
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	UParticleSystemComponent* ParticleComp;

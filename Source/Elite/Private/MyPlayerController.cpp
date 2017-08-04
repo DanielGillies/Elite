@@ -49,14 +49,18 @@ bool AMyPlayerController::GetLookDirection(FVector2D ScreenLocation, FVector& Lo
 	return false;
 }
 
-bool AMyPlayerController::GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation) const
+bool AMyPlayerController::GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation, float WeaponRange) const
 {
 	FHitResult HitResult;
 	auto StartLocation = PlayerCameraManager->GetCameraLocation();
-	auto EndLocation = StartLocation + LookDirection * 100000;
+	auto EndLocation = StartLocation + LookDirection * WeaponRange;
+
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(GetPawn());
+
 	// If Raycast collides with something
 	// TODO: Maybe change this to ECC_Camera?
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility))
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_WorldStatic, CollisionParams))
 	{
 		HitLocation = HitResult.Location;
 		return true;
@@ -65,7 +69,7 @@ bool AMyPlayerController::GetLookVectorHitLocation(FVector LookDirection, FVecto
 	return false;
 }
 
-bool AMyPlayerController::GetSightRayHitLocation(FVector& HitLocation) const
+bool AMyPlayerController::GetSightRayHitLocation(FVector& HitLocation, float WeaponRange) const
 {
 	int32 ViewportSizeX, ViewportSizeY;
 	GetViewportSize(ViewportSizeX, ViewportSizeY);
@@ -77,7 +81,7 @@ bool AMyPlayerController::GetSightRayHitLocation(FVector& HitLocation) const
 	{
 		/// Line-trace along that look direction, and see what we hit (up to max range)
 		/// GetLookVectorHitLocation
-		return GetLookVectorHitLocation(LookDirection, HitLocation);
+		return GetLookVectorHitLocation(LookDirection, HitLocation, WeaponRange);
 	}
 
 	return false;

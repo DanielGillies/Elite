@@ -37,6 +37,15 @@ ARocket::ARocket()
 	MovementComp->bRotationFollowsVelocity = true;
 	MovementComp->ProjectileGravityScale = 0.f;
 
+	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>(FName("Radial Force Component"), TEXT("RadialForceComp"));
+	RadialForceComp->ImpulseStrength = 65000.f;
+	RadialForceComp->DestructibleDamage = 1.0f;
+	//RadialForceComp->ForceStrength = 500000.f;
+	RadialForceComp->bAutoActivate = false;
+	RadialForceComp->Radius = 200.f;
+	RadialForceComp->Falloff = ERadialImpulseFalloff::RIF_Linear;
+	RadialForceComp->SetupAttachment(RootComponent);
+
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickGroup = TG_PrePhysics;
 	SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
@@ -45,8 +54,6 @@ ARocket::ARocket()
 
 	MovementComp->OnProjectileStop.AddDynamic(this, &ARocket::OnImpact);
 	CollisionComp->MoveIgnoreActors.Add(Instigator);
-
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *Instigator->GetName());
 
 }
 
@@ -57,6 +64,16 @@ void ARocket::BeginPlay()
 
 	//SetReplicates(true);
 	bReplicateMovement = true;
+
+	//FString netmode = "";
+	//if (GetNetMode() == NM_Client)
+	//	netmode = "CLIENT";
+	//else if (GetNetMode() == NM_ListenServer)
+	//	netmode = "LISTEN";
+	//else if (GetNetMode() == NM_DedicatedServer)
+	//	netmode = "SERVER";
+
+	//UE_LOG(LogTemp, Warning, TEXT("%s: ROCKET INSTIGATOR %s"), *netmode, *Instigator->GetName());
 	
 }
 
@@ -86,17 +103,19 @@ void ARocket::PostNetReceiveVelocity(const FVector& NewVelocity)
 
 void ARocket::OnImpact(const FHitResult& HitResult)
 {
-	//if (Role == ROLE_Authority)
-	//{
-	//	Explode(HitResult);
-	//	//DisableAndDestroy();
-	//}
+	if (Role == ROLE_Authority)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("ROCKET INSTIGATOR %s"), *Instigator->GetName());
+		Explode(HitResult);
+		//DisableAndDestroy();
+	}
 }
 
 void ARocket::Explode(const FHitResult& Impact)
 {
-	AMyPlayerController* CurrShooter = Cast<AMyPlayerController>(Shooter);
-	AElitePlayerState* ShooterPS = Cast<AElitePlayerState>(CurrShooter->PlayerState);
+	//Instigator->PlayerState;
+	//AMyPlayerController* CurrShooter = Cast<AMyPlayerController>(Shooter);
+	AElitePlayerState* ShooterPS = Cast<AElitePlayerState>(Instigator->PlayerState);
 	
 	AFPSCharacter* Victim = Cast<AFPSCharacter>(Impact.GetActor());
 	if (Victim)
@@ -111,11 +130,11 @@ void ARocket::Explode(const FHitResult& Impact)
 				UE_LOG(LogTemp, Warning, TEXT("SHOOTER TEAM = %d || VICTIM TEAM = %d"), ShooterPS->MyTeam, VictimPS->MyTeam);
 				if (VictimPS->MyTeam != ShooterPS->MyTeam)
 				{
-					float DamageTaken = Victim->TakeDamage(1.f, FDamageEvent(), Shooter, this);
+					//float DamageTaken = Victim->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
 					if (ShooterPS)
 					{
 						ShooterPS->Rockets += 1;
-						UE_LOG(LogTemp, Warning, TEXT("%s hit a rocket on %s -- Has %d rocket hits"), *Shooter->GetName(), *Victim->GetName(), ShooterPS->Rockets);
+						//UE_LOG(LogTemp, Warning, TEXT("%s hit a rocket on %s -- Has %d rocket hits"), *Shooter->GetName(), *Victim->GetName(), ShooterPS->Rockets);
 					}
 				}
 			}
@@ -172,6 +191,13 @@ void ARocket::Explode(const FHitResult& Impact)
 
 	//	bExploded = true;*/
 	//}
-	this->Destroy();
+	//this->Destroy();
+	//UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 80.f, 5.f, Impact.ImpactPoint, 80.f, 5.f, 10.f, )
+	const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
+	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 200.f, 20.f, NudgedImpactLocation, 50.f, 100.f, 10.f, UDamageType::StaticClass(), TArray<AActor*>(), GetOwner(), Instigator->GetController());
+	//UGameplayStatics::ApplyRadialDamage(GetWorld(), 80.f, Impact.ImpactPoint, 75.f, UDamageType::StaticClass(), TArray<AActor*>(), GetOwner(), Instigator->GetController());
+	RadialForceComp->FireImpulse();
+
+	Destroy();
 
 }

@@ -31,8 +31,8 @@ private:
 	float WallJumpUpForce = .7f;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = Attributes)
-	int Health = 3;
+	UPROPERTY(EditAnywhere, Category = Attributes, Replicated)
+		float Health = 100.0f;
 
 	UPROPERTY(EditAnywhere, Category = Attributes)
 	float RespawnDelay = 4.0f;
@@ -195,5 +195,8 @@ public:
 	void SpawnWeapon();
 
 	void EquipWeapon(AWeapon* WeaponToEquip);
+
+	UFUNCTION(BlueprintCallable, Category=Info)
+	float GetHealth() { return Health; };
 
 };

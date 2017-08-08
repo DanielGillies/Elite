@@ -3,6 +3,7 @@
 #include "Elite.h"
 #include "Weapon.h"
 #include "MyPlayerController.h"
+#include "ElitePlayerState.h"
 
 
 // Sets default values
@@ -11,6 +12,7 @@ AWeapon::AWeapon()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+	SetActorEnableCollision(false);
 
 	CollisionComp = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionComp"));
 	RootComponent = CollisionComp;
@@ -51,12 +53,10 @@ void AWeapon::Fire()
 {
 	if (ProjectileType == EWeaponProjectile::ERail)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("RAILGUN"));
 		InstantFire();
 	}
 	else if (ProjectileType == EWeaponProjectile::EProjectile)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ROCKET"));
 		FireProjectile();
 	}
 }
@@ -156,7 +156,6 @@ void AWeapon::InstantFire()
 	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TRACE_WEAPON, TraceParameters);
 
 	ServerNotifyShot(Start, End, HitResult);
-
 }
 
 bool AWeapon::ServerNotifyShot_Validate(FVector Start, FVector End, FHitResult HitResult)
@@ -171,6 +170,26 @@ void AWeapon::ServerNotifyShot_Implementation(FVector Start, FVector End, FHitRe
 	DrawRailParticle(Start, End);
 
 	// Check if we hit enemy
+	if (HitResult.bBlockingHit)
+	{
+		AFPSCharacter* Shooter = Cast<AFPSCharacter>(GetOwner());
+		AFPSCharacter* HitCharacter = Cast<AFPSCharacter>(HitResult.GetActor());
+
+		if (HitCharacter && Shooter)
+		{
+			AElitePlayerState* ShooterState = Cast<AElitePlayerState>(Shooter->PlayerState);
+			AElitePlayerState* VictimState = Cast<AElitePlayerState>(HitCharacter->PlayerState);
+			UE_LOG(LogTemp, Warning, TEXT("SHOOTER: %s HIT: %s"), *Shooter->PlayerState->GetName(), *HitCharacter->PlayerState->GetName());
+			if (ShooterState && VictimState)
+			{
+				// IF our shooter and victim are on different teams, deal damage
+				if (ShooterState->MyTeam != VictimState->MyTeam)
+				{
+					HitCharacter->TakeDamage(WeaponConfig.Damage, FDamageEvent::FDamageEvent(), Shooter->GetController(), Shooter);
+				}
+			}
+		}
+	}
 }
 
 bool AWeapon::DrawRailParticle_Validate(FVector Start, FVector End)

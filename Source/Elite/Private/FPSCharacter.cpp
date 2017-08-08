@@ -25,6 +25,7 @@ void AFPSCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 
 	// Replicate to everyone
 	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
+	DOREPLIFETIME(AFPSCharacter, Health);
 }
 
 void AFPSCharacter::SetupMovementComponent()
@@ -339,9 +340,12 @@ bool AFPSCharacter::CheckRightForWalls(FHitResult& OutHitResult)
 float AFPSCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
 {
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	UE_LOG(LogTemp, Warning, TEXT("IWJEFOWIEJFWOEFIJWEOFIWJEFOIWJEFOWIJEFWOEIFJWEOFIJ"));
+	UE_LOG(LogTemp, Warning, TEXT("INSTIGATOR: %s"), *EventInstigator->GetName());
 	if (ActualDamage > 0.f)
 	{
 		Health -= ActualDamage;
+		/*UE_LOG(LogTemp, Warning, TEXT("Remaining health: %f"), Health);*/
 		// If the damage kills us, set lifespan to 0 which destroys actor
 		if (Health <= 0.f)
 		{
@@ -420,7 +424,6 @@ void AFPSCharacter::ServerFireProjectile_Implementation(FTransform ProjectileTra
 	ARocket* Rocket = GetWorld()->SpawnActor<ARocket>(RocketBlueprint, ProjectileTransform, SpawnParams);
 	if (Rocket)
 	{
-		Rocket->Shooter = Shooter;
 		Rocket->LaunchProjectile(ShootDirection);
 		Rocket->SetReplicates(true);
 		Rocket->bAlwaysRelevant = true;
@@ -547,7 +550,7 @@ void AFPSCharacter::CheckIfHitEnemy(FHitResult HitResult, APlayerState* Shooter)
 					{
 						UE_LOG(LogTemp, Warning, TEXT("HIT TEAM = %d || Attacking Team = %d"), HitPlayerState->MyTeam, GS->AttackingTeam);
 						//ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(HitResult.GetActor());
-						float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+						//float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
 					}
 				}
 				

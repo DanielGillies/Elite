@@ -23,20 +23,23 @@ struct FWeaponData
 	//GENERATED_USTRUCT_BODY();
 	GENERATED_BODY()
 
-		UPROPERTY(EditDefaultsOnly, Category = Ammo)
-		int32 MaxAmmo;
+	UPROPERTY(EditDefaultsOnly, Category = Ammo)
+	int32 MaxAmmo;
 
 	UPROPERTY(EditDefaultsOnly, Category = Config)
-		float TimeBetweenShots;
+	float TimeBetweenShots;
 
 	UPROPERTY(EditDefaultsOnly, Category = Ammo)
-		int32 ShotCost;
+	int32 ShotCost;
 
 	UPROPERTY(EditDefaultsOnly, Category = Config)
-		float WeaponRange;
+	float WeaponRange;
 
 	UPROPERTY(EditDefaultsOnly, Category = Config)
-		float WeaponSpread;
+	float WeaponSpread;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+		float Damage;
 };
 
 UCLASS()

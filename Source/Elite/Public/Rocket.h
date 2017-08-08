@@ -32,8 +32,6 @@ public:
 	/** trigger explosion */
 	void Explode(const FHitResult& Impact);
 
-	AController* Shooter;
-
 	/** collisions */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	USphereComponent* CollisionComp;
@@ -43,9 +41,10 @@ private:
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	UProjectileMovementComponent* MovementComp;
 
-
-
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	UParticleSystemComponent* ParticleComp;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	URadialForceComponent* RadialForceComp;
 	
 };

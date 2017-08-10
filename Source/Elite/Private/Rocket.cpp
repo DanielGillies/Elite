@@ -194,6 +194,8 @@ void ARocket::Explode(const FHitResult& Impact)
 	//this->Destroy();
 	//UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 80.f, 5.f, Impact.ImpactPoint, 80.f, 5.f, 10.f, )
 	const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
+	TArray<AActor*> IgnoredActors;
+	IgnoredActors.Add(GetOwner());
 	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 200.f, 20.f, NudgedImpactLocation, 50.f, 100.f, 10.f, UDamageType::StaticClass(), TArray<AActor*>(), GetOwner(), Instigator->GetController());
 	//UGameplayStatics::ApplyRadialDamage(GetWorld(), 80.f, Impact.ImpactPoint, 75.f, UDamageType::StaticClass(), TArray<AActor*>(), GetOwner(), Instigator->GetController());
 	RadialForceComp->FireImpulse();

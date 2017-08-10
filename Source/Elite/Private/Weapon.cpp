@@ -105,7 +105,7 @@ void AWeapon::ServerFireProjectile_Implementation(FTransform ProjectileTransform
 {
 	// Set up SpawnParams for rocket
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
+	SpawnParams.Owner = this->GetOwner();
 	SpawnParams.Instigator = Instigator;
 	//SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
@@ -116,7 +116,7 @@ void AWeapon::ServerFireProjectile_Implementation(FTransform ProjectileTransform
 	{
 		//Rocket->Shooter = Shooter;
 		Rocket->CollisionComp->IgnoreActorWhenMoving(this, true);
-		//Rocket->CollisionComp->IgnoreActorWhenMoving(OwningPawn, true);
+		Rocket->CollisionComp->IgnoreActorWhenMoving(GetOwner(), true);
 		Rocket->LaunchProjectile(ShootDirection);
 		Rocket->SetReplicates(true);
 		Rocket->bAlwaysRelevant = true;

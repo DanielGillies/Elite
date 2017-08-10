@@ -115,6 +115,7 @@ void ARocket::Explode(const FHitResult& Impact)
 {
 	//Instigator->PlayerState;
 	//AMyPlayerController* CurrShooter = Cast<AMyPlayerController>(Shooter);
+	TArray<AActor*> IgnoredActors;
 	AElitePlayerState* ShooterPS = Cast<AElitePlayerState>(Instigator->PlayerState);
 	
 	AFPSCharacter* Victim = Cast<AFPSCharacter>(Impact.GetActor());
@@ -130,7 +131,9 @@ void ARocket::Explode(const FHitResult& Impact)
 				UE_LOG(LogTemp, Warning, TEXT("SHOOTER TEAM = %d || VICTIM TEAM = %d"), ShooterPS->MyTeam, VictimPS->MyTeam);
 				if (VictimPS->MyTeam != ShooterPS->MyTeam)
 				{
-					//float DamageTaken = Victim->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
+					UGameplayStatics::ApplyDamage(Victim, 70.f, Instigator->GetController(), Instigator, UDamageType::StaticClass());
+					// If we direct hit, ignore the actor that we hit for the radial damage call
+					IgnoredActors.Add(Victim);
 					if (ShooterPS)
 					{
 						ShooterPS->Rockets += 1;
@@ -140,64 +143,12 @@ void ARocket::Explode(const FHitResult& Impact)
 			}
 		}
 	}
-	//// Only Check what we hit if it is a player
-	//if (Cast<AFPSCharacter>(Impact.GetActor()))
-	//{
-	//	if (Cast<AAttackerCharacter>(Impact.GetActor()))
-	//	{
-	//		AAttackerCharacter* HitCharacter = Cast<AAttackerCharacter>(Impact.GetActor());
-	//		//FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
-	//		//UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
-	//		float DamageTaken = HitCharacter->TakeDamage(1.f, FDamageEvent(), Instigator->GetController(), this);
-	//		AElitePlayerState* PState = Cast<AElitePlayerState>(Instigator->GetController()->PlayerState);
-	//		if (PState)
-	//		{
-	//			PState->Rockets += 1;
-	//			UE_LOG(LogTemp, Warning, TEXT("%s hit a rocket on %s -- Has %d rocket hits"), *Instigator->GetName(), *HitCharacter->GetName(), PState->Rockets);
-	//		}
-	//		UE_LOG(LogTemp, Warning, TEXT("%f"), DamageTaken);
-	//	}
-	//	else
-	//	{
-	//		ADefenderCharacter* HitCharacter = Cast<ADefenderCharacter>(Impact.GetActor());
-	//		//FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
-	//		//UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
-	//	}
-	//	//ADefenderCharacter *HitCharacter = Cast<ADefenderCharacter>(Impact.GetActor());
-	//	//FString msg = "Name " + Impact.Actor->GetName() + ", Health " + FString::FromInt(HitCharacter->Health);
-	//	/*if (ParticleComp)
-	//	{
-	//		ParticleComp->Deactivate();
-	//	}*/
 
-	//	// effects and damage origin shouldn't be placed inside mesh at impact point
-	//	const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
-
-	//	/*if (WeaponConfig.ExplosionDamage > 0 && WeaponConfig.ExplosionRadius > 0 && WeaponConfig.DamageType)
-	//	{
-	//		UGameplayStatics::ApplyRadialDamage(this, WeaponConfig.ExplosionDamage, NudgedImpactLocation, WeaponConfig.ExplosionRadius, WeaponConfig.DamageType, TArray<AActor*>(), this, MyController.Get());
-	//	}
-
-	//	if (ExplosionTemplate)
-	//	{
-	//		FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), NudgedImpactLocation);
-	//		AShooterExplosionEffect* const EffectActor = GetWorld()->SpawnActorDeferred<AShooterExplosionEffect>(ExplosionTemplate, SpawnTransform);
-	//		if (EffectActor)
-	//		{
-	//			EffectActor->SurfaceHit = Impact;
-	//			UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
-	//		}
-	//	}
-
-	//	bExploded = true;*/
-	//}
-	//this->Destroy();
-	//UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 80.f, 5.f, Impact.ImpactPoint, 80.f, 5.f, 10.f, )
-	const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
-	TArray<AActor*> IgnoredActors;
+	//const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
+	
 	IgnoredActors.Add(GetOwner());
-	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 200.f, 20.f, NudgedImpactLocation, 50.f, 100.f, 10.f, UDamageType::StaticClass(), TArray<AActor*>(), GetOwner(), Instigator->GetController());
-	//UGameplayStatics::ApplyRadialDamage(GetWorld(), 80.f, Impact.ImpactPoint, 75.f, UDamageType::StaticClass(), TArray<AActor*>(), GetOwner(), Instigator->GetController());
+	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 50.f, 5.f, Impact.ImpactPoint, 50.f, 145.f, 10.f, UDamageType::StaticClass(), IgnoredActors, GetOwner(), Instigator->GetController());
+	//UGameplayStatics::ApplyRadialDamage(GetWorld(), 50.f, Impact.ImpactPoint, 160.f, UDamageType::StaticClass(), IgnoredActors, GetOwner(), Instigator->GetController());
 	RadialForceComp->FireImpulse();
 
 	Destroy();

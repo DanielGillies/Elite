@@ -52,3 +52,18 @@ bool AEliteGameMode::ReadyToStartMatch_Implementation() {
 	return false;
 }
 
+void AEliteGameMode::RespawnAllPlayers()
+{
+	for (APlayerController* PC : PlayerArray)
+	{
+		AMyPlayerController* EPC = Cast<AMyPlayerController>(PC);
+		if (EPC)
+		{
+			EPC->Die();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("NOPE YOU CUNT"));
+		}
+	}
+}

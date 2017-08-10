@@ -23,4 +23,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Debug)
 	bool bDebugMode = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Round Config")
+	int RoundScoreLimit = 2;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	TSubclassOf<class AFPSCharacter> CharacterBlueprint;
+
+	void RespawnAllPlayers();
 };

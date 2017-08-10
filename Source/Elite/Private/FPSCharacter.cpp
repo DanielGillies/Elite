@@ -26,6 +26,7 @@ void AFPSCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Out
 	// Replicate to everyone
 	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
 	DOREPLIFETIME(AFPSCharacter, Health);
+	DOREPLIFETIME(AFPSCharacter, DefaultWeapon);
 }
 
 void AFPSCharacter::SetupMovementComponent()
@@ -42,8 +43,22 @@ void AFPSCharacter::SetupMovementComponent()
 void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	AElitePlayerState* PS = Cast<AElitePlayerState>(this->PlayerState);
 
-	SpawnWeapon();
+	//THIS IS THROWING A NULL POINTER FUCKING SHIT
+	//PS->EquippedWeapon = DefaultWeapon;
+
+	if (PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *PS->GetName());
+		//SpawnWeapon(PS->EquippedWeapon);
+	}
+
+	//if (PS->EquippedWeapon)
+	//{
+	//	SpawnWeapon(PS->EquippedWeapon);
+	//}
 
 	//AWeapon *Spawner = SpawnWeapon();
 
@@ -63,17 +78,30 @@ void AFPSCharacter::BeginPlay()
 
 }
 
-bool AFPSCharacter::SpawnWeapon_Validate()
+bool AFPSCharacter::RemoveWeapon_Validate()
 {
 	return true;
 }
 
-void AFPSCharacter::SpawnWeapon_Implementation()
+void AFPSCharacter::RemoveWeapon_Implementation()
 {
+	if (CurrentWeapon) { CurrentWeapon->Destroy(); }
+}
+
+
+
+bool AFPSCharacter::SpawnWeapon_Validate(TSubclassOf<AWeapon> Weapon)
+{
+	return true;
+}
+
+void AFPSCharacter::SpawnWeapon_Implementation(TSubclassOf<AWeapon> Weapon)
+{
+	RemoveWeapon();
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = Instigator;
-	AWeapon *Spawner = GetWorld()->SpawnActor<AWeapon>(DefaultWeapon, SpawnParams);
+	AWeapon *Spawner = GetWorld()->SpawnActor<AWeapon>(Weapon, SpawnParams);
 	EquipWeapon(Spawner);
 	/*FName fnWeaponSocket = TEXT("weapon_socket");
 
@@ -81,6 +109,13 @@ void AFPSCharacter::SpawnWeapon_Implementation()
 
 	CurrentWeapon = Spawner;*/
 }
+
+
+void AFPSCharacter::SetDefaultWeapon(TSubclassOf<AWeapon> Weapon)
+{
+	DefaultWeapon = Weapon;
+}
+
 
 //bool AFPSCharacter::EquipWeapon_Validate(AWeapon* WeaponToEquip)
 //{
@@ -137,14 +172,15 @@ void AFPSCharacter::OnFire()
 	//UE_LOG(LogTemp, Warning, TEXT("%s"), *DefaultWeapon->GetName());
 
 	// Set up Player Controller to access functions
-	AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
+	//AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
 
-	FVector Start = (PC->PlayerCameraManager->GetCameraLocation() + (PC->GetActorForwardVector() * 50)) - FVector(0, 0, 10);
-	FVector End = Start + PC->GetActorForwardVector() * 5000;
+	//FVector Start = (PC->PlayerCameraManager->GetCameraLocation() + (PC->GetActorForwardVector() * 50)) - FVector(0, 0, 10);
+	//FVector End = Start + PC->GetActorForwardVector() * 5000;
 
-	UE_LOG(LogTemp, Warning, TEXT("IN CHAR: START = %s || END = %s"), *Start.ToString(), *End.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("IN CHAR: START = %s || END = %s"), *Start.ToString(), *End.ToString());
 
-	CurrentWeapon->Fire();
+	if (CurrentWeapon) { CurrentWeapon->Fire();  }
+	
 	/*DefaultWeapon->FireWeapon();*/
 	//DefaultWeapon->FireWeapon();
 	//AElitePlayerState* PS = Cast<AElitePlayerState>(GetController()->PlayerState);
@@ -340,8 +376,7 @@ bool AFPSCharacter::CheckRightForWalls(FHitResult& OutHitResult)
 float AFPSCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
 {
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-	UE_LOG(LogTemp, Warning, TEXT("IWJEFOWIEJFWOEFIJWEOFIWJEFOIWJEFOWIJEFWOEIFJWEOFIJ"));
-	UE_LOG(LogTemp, Warning, TEXT("INSTIGATOR: %s"), *EventInstigator->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("INSTIGATOR: %s"), *EventInstigator->GetName());
 	if (ActualDamage > 0.f)
 	{
 		Health -= ActualDamage;
@@ -349,17 +384,20 @@ float AFPSCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageE
 		// If the damage kills us, set lifespan to 0 which destroys actor
 		if (Health <= 0.f)
 		{
-			Cast<AMyPlayerController>(GetController())->Die(this);
+			// Add score to killer's team;
+			const AElitePlayerState* KillerPS = Cast<AElitePlayerState>(EventInstigator->PlayerState);
+			const int KillerTeam = KillerPS->MyTeam;
+
+			UE_LOG(LogTemp, Warning, TEXT("ADDING %d to team %d"), 1, KillerTeam);
+
+			AEliteGameState* GS = Cast<AEliteGameState>(GetWorld()->GetGameState());
+			GS->AddScoreToTeam(1, KillerTeam);
+
+			// Kill player
+			Cast<AMyPlayerController>(GetController())->Die();
 		}
 	}
 	return ActualDamage;
-}
-
-void AFPSCharacter::Die(AMyPlayerController* PC)
-{
-	SetLifeSpan(0.001f);
-	//FTimerHandle UnusedHandle;
-	//GetWorldTimerManager().SetTimer(UnusedHandle, this, PC->, RechargeTime, false);
 }
 
 /*Rocket Stuff*/

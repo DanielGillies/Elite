@@ -32,7 +32,9 @@ public:
 
 	bool GetLookVectorHitLocation(FVector LookDirection, FVector& HitLocation, float WeaponRange) const;
 	
-	void Die(AFPSCharacter* Caller);
+	FTimerHandle RespawnTimerHandle;
+
+	void Die();
 
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerRespawn();

@@ -35,19 +35,10 @@ protected:
 		float Health = 100.0f;
 
 	UPROPERTY(EditAnywhere, Category = Attributes)
-	float RespawnDelay = 4.0f;
-
-	void Die(class AMyPlayerController* PC);
-
-	/** currently equipped weapon */
-	UPROPERTY(Transient, Replicated)
-	class AWeapon* CurrentWeapon;
-
-	/** currently equipped weapon */
-	UPROPERTY(EditAnywhere, Category = Weapon)
-	TSubclassOf<AWeapon> DefaultWeapon;
+	float RespawnDelay = 2.0f;
 
 public:
+
 
 	/** WEAPONS **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapons)
@@ -56,7 +47,28 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapons)
 	TSubclassOf<AWeapon> RocketWeaponBP;
 
+	/** currently equipped weapon */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Weapons, Transient, Replicated)
+	class AWeapon* CurrentWeapon;
+
+	/** Default weapon */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Weapons, Replicated)
+	TSubclassOf<AWeapon> DefaultWeapon;
+
+	UFUNCTION(BlueprintCallable, Category = Weapons)
+	void SetDefaultWeapon(TSubclassOf<AWeapon> Weapon);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapons", Server, Reliable, WithValidation)
+	void SpawnWeapon(TSubclassOf<AWeapon> Weapon);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapons", Server, Reliable, WithValidation)
+	void RemoveWeapon();
+
+	void EquipWeapon(AWeapon* WeaponToEquip);
+
+	/************/
 	/** MESHES **/
+	/************/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Assets")
 	UMaterial* RedMat;
 
@@ -190,11 +202,6 @@ public:
 	void ServerFireRail(FVector Start, FVector End);*/
 
 	void CheckIfHitEnemy(FHitResult HitResult, APlayerState* Shooter);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void SpawnWeapon();
-
-	void EquipWeapon(AWeapon* WeaponToEquip);
 
 	UFUNCTION(BlueprintCallable, Category=Info)
 	float GetHealth() { return Health; };

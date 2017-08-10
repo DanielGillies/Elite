@@ -33,7 +33,27 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "GameState Team", Replicated)
 	TArray<AElitePlayerState*> Team2;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Team Scores", Replicated)
+	int Team1Score = 0;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Team Scores", Replicated)
+	int Team2Score = 0;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Team Scores", Replicated)
+	int Team1RoundScore = 0;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Team Scores", Replicated)
+	int Team2RoundScore = 0;
+
 	int AttackingTeam = 1;
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
+	void AddScoreToTeam(int PointsToAdd, int Team);
+
+	void CheckIfRoundWon();
+
+	void RoundWonByTeam(int WinningTeam);
+
+	void ResetRound();
 };

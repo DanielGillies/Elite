@@ -40,4 +40,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Ready", Server, Unreliable, WithValidation)
 	void ToggleReady(AElitePlayerState* PS);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons", Replicated)
+	TSubclassOf<class AWeapon> EquippedWeapon;
 };

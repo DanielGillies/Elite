@@ -87,12 +87,12 @@ bool AMyPlayerController::GetSightRayHitLocation(FVector& HitLocation, float Wea
 	return false;
 }
 
-void AMyPlayerController::Die(AFPSCharacter* Caller)
+void AMyPlayerController::Die()
 {
-	Caller->SetLifeSpan(0.001f);
-	FTimerHandle UnusedHandle;
-	AMyPlayerController* PC = Cast<AMyPlayerController>(Caller->GetController());
-	GetWorldTimerManager().SetTimer(UnusedHandle, PC, &AMyPlayerController::Respawn, 4.0f);
+	GetPawn()->SetLifeSpan(0.001f);
+	//AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
+	GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
+	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AMyPlayerController::Respawn, 4.0f);
 }
 
 void AMyPlayerController::Respawn()
@@ -109,6 +109,15 @@ bool AMyPlayerController::ServerRespawn_Validate()
 
 void AMyPlayerController::ServerRespawn_Implementation()
 {
+	FVector SpawnLocation = FVector(0, 0, 0);
+	APawn* OldPawn = GetPawn();
+
+	/*TSubclassOf<AFPSCharacter> FPSCharacterBP = CharacterBlueprint;*/
+	AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
+	AFPSCharacter* NewCharacter = (AFPSCharacter*)GetWorld()->SpawnActor(GameMode->CharacterBlueprint, &SpawnLocation, &FRotator::ZeroRotator);
+	UnPossess();
+	Possess(NewCharacter);
+	//AFPSCharacter* NewCharacter = new AFPSCharacter
 	//UE_LOG(LogTemp, Warning, TEXT("IN IT"));
 	//FVector SpawnLocation = FVector(0, 0, 0);
 	//AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();

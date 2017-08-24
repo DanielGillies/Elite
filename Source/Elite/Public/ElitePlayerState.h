@@ -42,5 +42,7 @@ public:
 	void ToggleReady(AElitePlayerState* PS);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons", Replicated)
-	TSubclassOf<class AWeapon> EquippedWeapon;
+	class AWeapon* EquippedWeapon;
+
+	bool isWeaponEquipped = false;
 };

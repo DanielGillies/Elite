@@ -49,4 +49,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float CrosshairYLocation = 0.5f;
+
+	AFPSCharacter* OwnedPawn;
 };

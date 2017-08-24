@@ -89,7 +89,11 @@ bool AMyPlayerController::GetSightRayHitLocation(FVector& HitLocation, float Wea
 
 void AMyPlayerController::Die()
 {
-	GetPawn()->SetLifeSpan(0.001f);
+	//GetPawn()->SetLifeSpan(0.001f);
+	if (!OwnedPawn) { OwnedPawn = GetControlledPlayer(); }
+	OwnedPawn->bHidden = true;
+	OwnedPawn->SetActorEnableCollision(false);
+	UnPossess();
 	//AMyPlayerController* PC = Cast<AMyPlayerController>(GetController());
 	GetWorld()->GetTimerManager().ClearTimer(RespawnTimerHandle);
 	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AMyPlayerController::Respawn, 4.0f);
@@ -109,38 +113,23 @@ bool AMyPlayerController::ServerRespawn_Validate()
 
 void AMyPlayerController::ServerRespawn_Implementation()
 {
-	FVector SpawnLocation = FVector(0, 0, 0);
-	APawn* OldPawn = GetPawn();
+	FVector SpawnLocation = FVector(0, 0, 100);
+	if (OwnedPawn)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *OwnedPawn->GetName());
+		OwnedPawn->SetActorEnableCollision(true);
+		OwnedPawn->SetActorLocation(SpawnLocation);
+		OwnedPawn->bHidden = false;
+		OwnedPawn->SetHealth(100.f);
+		Possess(OwnedPawn);
+	}
+	//APawn* OldPawn = GetPawn();
 
 	/*TSubclassOf<AFPSCharacter> FPSCharacterBP = CharacterBlueprint;*/
-	AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
-	AFPSCharacter* NewCharacter = (AFPSCharacter*)GetWorld()->SpawnActor(GameMode->CharacterBlueprint, &SpawnLocation, &FRotator::ZeroRotator);
-	UnPossess();
-	Possess(NewCharacter);
-	//AFPSCharacter* NewCharacter = new AFPSCharacter
-	//UE_LOG(LogTemp, Warning, TEXT("IN IT"));
-	//FVector SpawnLocation = FVector(0, 0, 0);
 	//AEliteGameMode* GameMode = (AEliteGameMode*)GetWorld()->GetAuthGameMode();
-	//UE_LOG(LogTemp, Warning, TEXT("PRE CAST"));
-	///*AMyPlayerController* PC = Cast<AMyPlayerController>(Caller->GetController());*/
-	//UE_LOG(LogTemp, Warning, TEXT("POST"));
-	////APawn* OldPawn = PC->GetPawn();
-
-	//if (!Attacking)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Respawning Defender"));
-	//	TSubclassOf<ADefenderCharacter> DefenderBP = GameMode->DefenderBlueprint;
-	//	ADefenderCharacter* NewCharacter = (ADefenderCharacter*)GetWorld()->SpawnActor(DefenderBP, &SpawnLocation, &FRotator::ZeroRotator);
-	//	UnPossess();
-	//	Possess(NewCharacter);
-	//	
-	//}
-	//else
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Respawning Attacker"));
-	//	TSubclassOf<AAttackerCharacter> AttackerBP = GameMode->AttackerBlueprint;
-	//	AAttackerCharacter* NewCharacter = (AAttackerCharacter*)GetWorld()->SpawnActor(AttackerBP, &SpawnLocation, &FRotator::ZeroRotator);
-	//	UnPossess();
-	//	Possess(NewCharacter);
-	//}
+	//AFPSCharacter* NewCharacter = (AFPSCharacter*)GetWorld()->SpawnActor(GameMode->CharacterBlueprint, &SpawnLocation, &FRotator::ZeroRotator);
+	//UnPossess();
+	//OwnedPawn->bHidden = false;
+	//OwnedPawn->SetActorLocation(SpawnLocation);
+	//Possess(OwnedPawn);
 }

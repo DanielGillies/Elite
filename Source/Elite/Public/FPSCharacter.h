@@ -41,11 +41,11 @@ public:
 
 
 	/** WEAPONS **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapons)
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapons)
 	TSubclassOf<AWeapon> RailGunBP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapons)
-	TSubclassOf<AWeapon> RocketWeaponBP;
+	TSubclassOf<AWeapon> RocketWeaponBP;*/
 
 	/** currently equipped weapon */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Weapons, Transient, Replicated)
@@ -205,5 +205,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category=Info)
 	float GetHealth() { return Health; };
+
+	void SetHealth(float Health) { this->Health = Health; }
 
 };

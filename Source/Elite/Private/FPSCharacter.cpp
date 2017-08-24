@@ -44,38 +44,6 @@ void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	AElitePlayerState* PS = Cast<AElitePlayerState>(this->PlayerState);
-
-	//THIS IS THROWING A NULL POINTER FUCKING SHIT
-	//PS->EquippedWeapon = DefaultWeapon;
-
-	if (PS)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *PS->GetName());
-		//SpawnWeapon(PS->EquippedWeapon);
-	}
-
-	//if (PS->EquippedWeapon)
-	//{
-	//	SpawnWeapon(PS->EquippedWeapon);
-	//}
-
-	//AWeapon *Spawner = SpawnWeapon();
-
-	//FName fnWeaponSocket = TEXT("weapon_socket");
-
-	//CurrentWeapon = DefaultWeapon->GetDefaultObject<AWeapon>();
-
-	//CurrentWeapon->AttachToActor(this, FAttachmentTransformRules::SnapToTargetIncludingScale, "weapon_socket");
-	//CurrentWeapon->AttachRootComponentTo(GetMesh(), fnWeaponSocket, EAttachLocation::SnapToTarget);
-
-	//Spawner->WeaponMesh->SetOwnerNoSee(true);
-
-	//CurrentWeapon->SetOwner(this);
-	//CurrentWeapon->SetOwner(this);
-
-	//CurrentWeapon = Spawner;
-
 }
 
 bool AFPSCharacter::RemoveWeapon_Validate()
@@ -87,8 +55,6 @@ void AFPSCharacter::RemoveWeapon_Implementation()
 {
 	if (CurrentWeapon) { CurrentWeapon->Destroy(); }
 }
-
-
 
 bool AFPSCharacter::SpawnWeapon_Validate(TSubclassOf<AWeapon> Weapon)
 {
@@ -127,6 +93,11 @@ void AFPSCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 	FName fnWeaponSocket = TEXT("weapon_socket");
 	CurrentWeapon = WeaponToEquip;
 	CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, fnWeaponSocket);
+
+	AElitePlayerState* PS = Cast<AElitePlayerState>(PlayerState);
+	PS->EquippedWeapon = WeaponToEquip;
+	PS->isWeaponEquipped = true;
+
 }
 
 // Called every frame
